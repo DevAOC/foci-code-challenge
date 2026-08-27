@@ -23,12 +23,12 @@ describe("todos table", () => {
     expect(todo.updatedAt.getTime()).toBeGreaterThanOrEqual(todo.createdAt.getTime());
   });
 
-  it("round-trips every column, preserving dueDate as a calendar date", async () => {
+  it("round-trips every column, preserving dueDate to the millisecond", async () => {
     const created = await prisma.todo.create({
       data: {
         title: "File taxes",
         description: "Gather receipts first",
-        dueDate: new Date("2026-04-30"),
+        dueDate: new Date("2026-04-30T17:30:00.123Z"),
         isCompleted: true,
       },
     });
@@ -38,7 +38,7 @@ describe("todos table", () => {
     expect(fetched.title).toBe("File taxes");
     expect(fetched.description).toBe("Gather receipts first");
     expect(fetched.isCompleted).toBe(true);
-    expect(fetched.dueDate?.toISOString().slice(0, 10)).toBe("2026-04-30");
+    expect(fetched.dueDate?.toISOString()).toBe("2026-04-30T17:30:00.123Z");
   });
 
   it("advances updatedAt when a row is updated", async () => {
@@ -79,7 +79,7 @@ describe("todos table", () => {
       { column_name: "id", data_type: "uuid", is_nullable: "NO", character_maximum_length: null },
       { column_name: "title", data_type: "character varying", is_nullable: "NO", character_maximum_length: 200 },
       { column_name: "description", data_type: "character varying", is_nullable: "YES", character_maximum_length: 2000 },
-      { column_name: "due_date", data_type: "date", is_nullable: "YES", character_maximum_length: null },
+      { column_name: "due_date", data_type: "timestamp with time zone", is_nullable: "YES", character_maximum_length: null },
       { column_name: "is_completed", data_type: "boolean", is_nullable: "NO", character_maximum_length: null },
       { column_name: "created_at", data_type: "timestamp with time zone", is_nullable: "NO", character_maximum_length: null },
       { column_name: "updated_at", data_type: "timestamp with time zone", is_nullable: "NO", character_maximum_length: null },

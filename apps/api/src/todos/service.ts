@@ -1,17 +1,16 @@
 // The one module that touches the todos table. Routes call these functions and
-// nothing else; Prisma-specific behaviour (not-found errors, date columns) is
+// nothing else; Prisma-specific behaviour (not-found errors) is
 // translated here so it never leaks into the HTTP layer.
 import { NotFoundError } from "../http/errors.js";
 import { Prisma, type PrismaClient, type Todo } from "../generated/prisma/client.js";
-import type { CreateTodoInput, UpdateTodoInput } from "./schemas.js";
-import { parseCalendarDate } from "./serialize.js";
+import type { CreateTodoInput, UpdateTodoInput } from "@foci/contracts";
 
 export async function createTodo(prisma: PrismaClient, input: CreateTodoInput): Promise<Todo> {
   return prisma.todo.create({
     data: {
       title: input.title,
       description: input.description ?? null,
-      dueDate: input.dueDate === undefined ? null : parseCalendarDate(input.dueDate),
+      dueDate: input.dueDate === undefined ? null : new Date(input.dueDate),
     },
   });
 }
@@ -46,7 +45,7 @@ export async function updateTodo(
   if (input.title !== undefined) data.title = input.title;
   if (input.description !== undefined) data.description = input.description;
   if (input.dueDate !== undefined) {
-    data.dueDate = input.dueDate === null ? null : parseCalendarDate(input.dueDate);
+    data.dueDate = input.dueDate === null ? null : new Date(input.dueDate);
   }
   if (input.isCompleted !== undefined) data.isCompleted = input.isCompleted;
 
