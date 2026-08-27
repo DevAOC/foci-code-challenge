@@ -82,11 +82,16 @@ and `.../foci_test`.
 
 ```sh
 pnpm install
+pnpm db:migrate  # apply migrations to foci_dev (tests migrate foci_test themselves)
 pnpm typecheck   # generates the Prisma client, then tsc --noEmit
 pnpm test        # generates the Prisma client, then vitest against foci_test
 ```
 
-Both commands must be green before committing.
+`typecheck` and `test` must be green before committing. Confirm the table
+landed in your dev database with `psql -d foci_dev -c '\d todos'`.
+
+There is no `pnpm dev` yet — this slice of the project is the database layer
+only. The HTTP server arrives with the API work tracked in issue #3.
 
 ## Everyday commands
 
@@ -197,6 +202,15 @@ this automatically on every `prisma generate`.
 **`FATAL: role "<user>" does not exist`** — the `.env` username doesn't match
 the Postgres superuser. Homebrew creates a role named after the macOS user that
 installed it; run `whoami` and use that.
+
+**`FATAL: password authentication failed`** or a prompt for a password — your
+Postgres isn't the Homebrew build with local trust auth (Postgres.app and most
+Linux installs require a password). Put the credentials in the URL:
+`postgresql://<user>:<password>@localhost:5432/foci_dev`.
+
+**`relation "todos" does not exist` in `foci_dev`** — migrations haven't been
+applied to the dev database. Run `pnpm db:migrate`. (`foci_test` is migrated
+automatically by the test suite.)
 
 **`FATAL: database "foci_test" does not exist`** — step 3 was skipped. Run
 `pnpm db:setup`.

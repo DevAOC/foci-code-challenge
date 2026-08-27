@@ -32,6 +32,7 @@ plans/          Phased implementation plans (tracer-bullet slices).
 pnpm install
 pnpm db:setup                       # creates foci_dev and foci_test if missing
 cp apps/api/.env.example apps/api/.env   # then replace <macos-user> with `whoami`
+pnpm db:migrate                     # apply migrations to foci_dev
 pnpm typecheck
 pnpm test
 ```
