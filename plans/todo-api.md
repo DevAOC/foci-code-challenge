@@ -4,7 +4,7 @@
 
 ## Scope
 
-Deliver a thin JSON REST API over the existing `todos` table, shipped as **two PRs**:
+Deliver a thin JSON REST API over the existing `todos` table, shipped as **two PRs** (later folded into one, PR #5):
 
 - **PR 1 — phases 1–3**: server scaffold, error contract, validation schemas, and the first tracer bullet (`POST /todos` + `GET /todos/:id`), plus docs.
 - **PR 2 — phases 4–6**: `GET /todos`, `DELETE /todos/:id`, `PATCH /todos/:id`, and a coverage sweep.
@@ -55,15 +55,15 @@ Add Fastify and the app factory, an entrypoint runnable with `pnpm dev` (root an
 
 ### Acceptance criteria
 
-- [ ] `pnpm dev` (root) starts the API on `PORT` (default 3000) and stops cleanly on Ctrl-C, disconnecting Prisma
-- [ ] The app factory accepts a Prisma client and returns a Fastify instance without listening
-- [ ] `PORT` documented in `.env.example`
-- [ ] Test: `GET /nope` → 404 with `{ error: { statusCode: 404, code: "NOT_FOUND", message } }` and no `issues`
-- [ ] Test: `POST` with a malformed JSON body → 400 with `code: "VALIDATION_ERROR"`
-- [ ] Test: a route that throws an unexpected error → 500 with `code: "INTERNAL_ERROR"` and a generic message that does not contain the thrown message
-- [ ] Test: a thrown `NotFoundError` → 404 body; a thrown `ValidationError` with issues → 400 body including `issues`
-- [ ] Test: every error response has `content-type: application/json`
-- [ ] Logger is silent under Vitest
+- [x] `pnpm dev` (root) starts the API on `PORT` (default 3000) and stops cleanly on Ctrl-C, disconnecting Prisma
+- [x] The app factory accepts a Prisma client and returns a Fastify instance without listening
+- [x] `PORT` documented in `.env.example`
+- [x] Test: `GET /nope` → 404 with `{ error: { statusCode: 404, code: "NOT_FOUND", message } }` and no `issues`
+- [x] Test: `POST` with a malformed JSON body → 400 with `code: "VALIDATION_ERROR"`
+- [x] Test: a route that throws an unexpected error → 500 with `code: "INTERNAL_ERROR"` and a generic message that does not contain the thrown message
+- [x] Test: a thrown `NotFoundError` → 404 body; a thrown `ValidationError` with issues → 400 body including `issues`
+- [x] Test: every error response has `content-type: application/json`
+- [x] Logger is silent under Vitest
 
 ---
 
@@ -77,14 +77,14 @@ The zod schemas for create, update, and the `:id` route param, with the field ru
 
 ### Acceptance criteria
 
-- [ ] Create schema: title required; trimmed; `""` and `"   "` rejected; 200 chars accepted, 201 rejected; non-string rejected
-- [ ] Create schema: description optional; 2000 accepted, 2001 rejected; `""` → `null`; whitespace-only → trimmed then `null`; non-string rejected
-- [ ] Create schema: `dueDate` optional; `2026-03-01` accepted; `2024-02-29` accepted; `2023-02-29`, `2026-02-30`, `2026-13-01`, `2026-1-5`, `03/01/2026`, `2026-03-01T00:00:00Z`, and non-string values rejected
-- [ ] Create schema: `isCompleted`, `id`, `createdAt`, and unknown keys such as `duedate` rejected (strict)
-- [ ] Update schema: every field optional; `title: null` rejected; `description: null` and `dueDate: null` accepted; `isCompleted` must be boolean; `{}` rejected with a message naming the requirement; unknown keys rejected
-- [ ] Id param schema: a UUID accepted; `123`, `not-a-uuid`, and a UUID with a trailing character rejected
-- [ ] The issues helper maps a zod error to `[{ path, message }]` with dotted paths
-- [ ] Each length limit carries a comment pointing at the Prisma schema, and vice versa
+- [x] Create schema: title required; trimmed; `""` and `"   "` rejected; 200 chars accepted, 201 rejected; non-string rejected
+- [x] Create schema: description optional; 2000 accepted, 2001 rejected; `""` → `null`; whitespace-only → trimmed then `null`; non-string rejected
+- [x] Create schema: `dueDate` optional; `2026-03-01` accepted; `2024-02-29` accepted; `2023-02-29`, `2026-02-30`, `2026-13-01`, `2026-1-5`, `03/01/2026`, `2026-03-01T00:00:00Z`, and non-string values rejected
+- [x] Create schema: `isCompleted`, `id`, `createdAt`, and unknown keys such as `duedate` rejected (strict)
+- [x] Update schema: every field optional; `title: null` rejected; `description: null` and `dueDate: null` accepted; `isCompleted` must be boolean; `{}` rejected with a message naming the requirement; unknown keys rejected
+- [x] Id param schema: a UUID accepted; `123`, `not-a-uuid`, and a UUID with a trailing character rejected
+- [x] The issues helper maps a zod error to `[{ path, message }]` with dotted paths
+- [x] Each length limit carries a comment pointing at the Prisma schema, and vice versa
 
 ---
 
@@ -98,16 +98,16 @@ The first tracer bullet: `POST /todos` and `GET /todos/:id` through routing → 
 
 ### Acceptance criteria
 
-- [ ] Test: create with title only → 201; body has exactly the seven representation fields; `id` is a UUID; `description` and `dueDate` are `null`; `isCompleted` is `false`; `createdAt`/`updatedAt` are ISO strings
-- [ ] Test: create with all fields → 201; `dueDate` echoes the same `YYYY-MM-DD` (no timezone drift); description preserved
-- [ ] Test: create trims the title; `""` description is stored and returned as `null`
-- [ ] Test: create rejections → 400 with `issues[].path`: missing title, `""`, whitespace-only, 201-char title, 2001-char description, invalid date, impossible date, wrong types, unknown field, malformed JSON; and no row is written in each case
-- [ ] Test: 200-char title and 2000-char description are accepted end to end
-- [ ] Test: `GET /todos/:id` returns the created todo byte-for-byte equal to the create response
-- [ ] Test: unknown UUID → 404 `NOT_FOUND`; non-UUID → 400 `VALIDATION_ERROR` with `path: "id"`
-- [ ] Test: a todo created through one app instance is readable through a second app instance on the same database (persistence between runs)
-- [ ] `README.md` has the endpoint table; `DEVELOPMENT.md` documents `pnpm dev` and `PORT`; `docs/decisions.md` records Fastify, PATCH-only completion, error body, strict schemas, list envelope + ordering, single `todos` module, in-package schemas; `CLAUDE.md` reflects the new state and commands
-- [ ] `pnpm typecheck` and `pnpm test` green; PR 1 opened
+- [x] Test: create with title only → 201; body has exactly the seven representation fields; `id` is a UUID; `description` and `dueDate` are `null`; `isCompleted` is `false`; `createdAt`/`updatedAt` are ISO strings
+- [x] Test: create with all fields → 201; `dueDate` echoes the same `YYYY-MM-DD` (no timezone drift); description preserved
+- [x] Test: create trims the title; `""` description is stored and returned as `null`
+- [x] Test: create rejections → 400 with `issues[].path`: missing title, `""`, whitespace-only, 201-char title, 2001-char description, invalid date, impossible date, wrong types, unknown field, malformed JSON; and no row is written in each case
+- [x] Test: 200-char title and 2000-char description are accepted end to end
+- [x] Test: `GET /todos/:id` returns the created todo byte-for-byte equal to the create response
+- [x] Test: unknown UUID → 404 `NOT_FOUND`; non-UUID → 400 `VALIDATION_ERROR` with `path: "id"`
+- [x] Test: a todo created through one app instance is readable through a second app instance on the same database (persistence between runs)
+- [x] `README.md` has the endpoint table; `DEVELOPMENT.md` documents `pnpm dev` and `PORT`; `docs/decisions.md` records Fastify, PATCH-only completion, error body, strict schemas, list envelope + ordering, single `todos` module, in-package schemas; `CLAUDE.md` reflects the new state and commands
+- [x] `pnpm typecheck` and `pnpm test` green; PR #5 opened
 
 ---
 
@@ -121,13 +121,13 @@ The first tracer bullet: `POST /todos` and `GET /todos/:id` through routing → 
 
 ### Acceptance criteria
 
-- [ ] Test: empty database → 200 `{ todos: [] }`
-- [ ] Test: three todos created in sequence come back in creation order with the full representation each
-- [ ] Test: two todos with an identical `createdAt` (inserted directly via Prisma) come back ordered by `id`
-- [ ] Test: list reflects a subsequent create and a subsequent delete
-- [ ] Test: delete → 204 with an empty body; subsequent `GET /todos/:id` → 404; second `DELETE` → 404
-- [ ] Test: delete unknown UUID → 404; non-UUID → 400 with `path: "id"`
-- [ ] Test: deleting one todo leaves the others intact
+- [x] Test: empty database → 200 `{ todos: [] }`
+- [x] Test: three todos created in sequence come back in creation order with the full representation each
+- [x] Test: two todos with an identical `createdAt` (inserted directly via Prisma) come back ordered by `id`
+- [x] Test: list reflects a subsequent create and a subsequent delete
+- [x] Test: delete → 204 with an empty body; subsequent `GET /todos/:id` → 404; second `DELETE` → 404
+- [x] Test: delete unknown UUID → 404; non-UUID → 400 with `path: "id"`
+- [x] Test: deleting one todo leaves the others intact
 
 ---
 
@@ -141,17 +141,17 @@ The first tracer bullet: `POST /todos` and `GET /todos/:id` through routing → 
 
 ### Acceptance criteria
 
-- [ ] Test: patch `title` only → 200; other fields unchanged; title trimmed
-- [ ] Test: patch `description` only; patch `dueDate` only; each leaves the others unchanged
-- [ ] Test: `description: null` and `dueDate: null` clear the field; `description: ""` also clears it
-- [ ] Test: `isCompleted: true` → completed; then `isCompleted: false` → not completed; other fields unchanged
-- [ ] Test: patching several fields at once applies all of them
-- [ ] Test: `updatedAt` advances and `createdAt` is unchanged after a patch
-- [ ] Test: `{}` → 400; `title: null` → 400; `title: ""` → 400; over-length title/description → 400; invalid/impossible date → 400; unknown field → 400; wrong types → 400
-- [ ] Test: a rejected patch leaves the row byte-for-byte untouched, including `updatedAt`
-- [ ] Test: unknown UUID → 404; non-UUID → 400 with `path: "id"`
-- [ ] Test: the patched todo is returned identically by a subsequent `GET /todos/:id`
-- [ ] `README.md` endpoint table no longer marks the `PATCH` rows as pending
+- [x] Test: patch `title` only → 200; other fields unchanged; title trimmed
+- [x] Test: patch `description` only; patch `dueDate` only; each leaves the others unchanged
+- [x] Test: `description: null` and `dueDate: null` clear the field; `description: ""` also clears it
+- [x] Test: `isCompleted: true` → completed; then `isCompleted: false` → not completed; other fields unchanged
+- [x] Test: patching several fields at once applies all of them
+- [x] Test: `updatedAt` advances and `createdAt` is unchanged after a patch
+- [x] Test: `{}` → 400; `title: null` → 400; `title: ""` → 400; over-length title/description → 400; invalid/impossible date → 400; unknown field → 400; wrong types → 400
+- [x] Test: a rejected patch leaves the row byte-for-byte untouched, including `updatedAt`
+- [x] Test: unknown UUID → 404; non-UUID → 400 with `path: "id"`
+- [x] Test: the patched todo is returned identically by a subsequent `GET /todos/:id`
+- [x] `README.md` endpoint table no longer marks the `PATCH` rows as pending
 
 ---
 
@@ -165,10 +165,10 @@ Run Vitest with coverage over the API package and read the report for the routes
 
 ### Acceptance criteria
 
-- [ ] Coverage report shows every branch of routes, error handler, schemas, serializer, and the `todos` module exercised
-- [ ] Any new tests added are named for the behaviour they pin, not the line they cover
-- [ ] `README.md`, `DEVELOPMENT.md`, `docs/decisions.md`, and `CLAUDE.md` match the shipped behaviour
-- [ ] `pnpm typecheck` and `pnpm test` green; PR 2 opened
+- [x] Coverage report shows every branch of routes, error handler, schemas, serializer, and the `todos` module exercised
+- [x] Any new tests added are named for the behaviour they pin, not the line they cover
+- [x] `README.md`, `DEVELOPMENT.md`, `docs/decisions.md`, and `CLAUDE.md` match the shipped behaviour
+- [x] `pnpm typecheck` and `pnpm test` green (folded into PR #5 at the author's request)
 
 ---
 

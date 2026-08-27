@@ -17,6 +17,7 @@ pnpm dev                      # Fastify API on http://127.0.0.1:$PORT (default 3
 pnpm typecheck                # prisma generate && tsc --noEmit, every package
 pnpm test                     # prisma generate && vitest run, every package
 pnpm --filter @foci/api test -- src/db/todos.test.ts   # single test file
+pnpm --filter @foci/api test:coverage                  # coverage for app/http/todos modules
 pnpm db:migrate               # prisma migrate dev against foci_dev
 pnpm --filter @foci/api exec prisma migrate dev --name <name>   # new migration
 ```

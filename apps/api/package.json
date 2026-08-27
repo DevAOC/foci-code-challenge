@@ -7,6 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "typecheck": "prisma generate && tsc --noEmit",
     "test": "prisma generate && vitest run",
+    "test:coverage": "prisma generate && vitest run --coverage",
     "db:setup": "./scripts/db-setup.sh",
     "db:migrate": "prisma migrate dev",
     "db:migrate:test": "dotenv -e .env -- sh -c 'DATABASE_URL=\"$TEST_DATABASE_URL\" prisma migrate deploy'",

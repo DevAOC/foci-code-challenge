@@ -113,6 +113,7 @@ All commands run from the repository root.
 | `pnpm dev`                                                    | Start the API with reload (`tsx watch`)                       |
 | `pnpm typecheck`                                              | Type-check every workspace package                            |
 | `pnpm test`                                                   | Run every test suite                                          |
+| `pnpm --filter @foci/api test:coverage`                       | Tests plus a coverage report for the API modules              |
 | `pnpm --filter @foci/api test -- src/db/connectivity.test.ts` | Run a single test file                                        |
 | `pnpm --filter @foci/api exec vitest`                         | Run tests in watch mode                                       |
 | `pnpm db:setup`                                               | Create `foci_dev` / `foci_test` if they don't exist           |
