@@ -24,8 +24,8 @@ model Todo {
   /// Optional. The API normalizes "" to NULL so there is one representation of "no description".
   description String? @db.VarChar(2000)
 
-  /// Calendar date only — no time of day, no timezone.
-  dueDate DateTime? @map("due_date") @db.Date
+  /// The instant the todo is due (time-of-day is a product requirement, see docs/decisions.md).
+  dueDate DateTime? @map("due_date") @db.Timestamptz
 
   /// Single source of truth for completion; there is deliberately no completed_at.
   isCompleted Boolean @default(false) @map("is_completed")

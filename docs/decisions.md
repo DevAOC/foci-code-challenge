@@ -59,12 +59,23 @@ are exposed. Client-side generation is Prisma's default and keeps the migration
 free of database functions; it can be switched to `dbgenerated(...)` without a
 data migration.
 
-### `date` for due dates, not `timestamptz`
-**Chosen:** `due_date date NULL`.
-**Rejected:** `timestamptz` (time-of-day support).
+### `date` for due dates, not `timestamptz` — superseded 2026-08-27
+**Originally chosen:** `due_date date NULL`.
+**Rejected at the time:** `timestamptz` (time-of-day support).
 **Why:** a minimal todo list rarely needs time-of-day, and a bare `date`
 sidesteps the most common due-date bug class: off-by-one-day errors from
 timezone conversion. A time column can be added later without touching anything.
+
+**Superseded by:** the web-app design review of 2026-08-27 (issue #6,
+[`plans/todo-web.md`](../plans/todo-web.md)), which made "due at 3:00 PM" a
+product requirement. New information, not a change of taste.
+**Now chosen:** `due_date timestamptz NULL`, migrated in place (no data existed).
+On the wire `dueDate` is an ISO 8601 date-time that **must** carry an offset
+(`Z` or `±hh:mm`) and is always returned normalized to UTC with millisecond
+precision; a bare `YYYY-MM-DD` is a 400. The off-by-one-day risk the original
+decision avoided is handled at the edges instead: the browser converts its local
+`datetime-local` input to an instant before sending and formats the instant back
+in the viewer's zone, and nothing in between ever parses a date without an offset.
 
 ### `is_completed` boolean only — no `completed_at`
 **Chosen:** `is_completed boolean NOT NULL DEFAULT false`.

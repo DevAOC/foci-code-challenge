@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { issuesFromZod } from "../http/errors.js";
-import {
-  createTodoSchema,
-  isCalendarDate,
-  todoIdParamsSchema,
-  updateTodoSchema,
-} from "./schemas.js";
+import { createTodoSchema, todoIdParamsSchema, updateTodoSchema } from "./schemas.js";
 import type { z } from "zod";
 
 /** Returns the dotted paths of the failing fields, or [] when parsing succeeds. */
@@ -73,31 +68,44 @@ describe("createTodoSchema", () => {
       expect(createTodoSchema.parse({ title: "t" })).not.toHaveProperty("dueDate");
     });
 
-    it.each(["2026-03-01", "2024-02-29", "2000-02-29", "1999-12-31"])("accepts %s", (dueDate) => {
+    it.each([
+      "2026-09-03T15:00:00Z",
+      "2026-09-03T15:00:00.000Z",
+      "2026-09-03T11:00:00-04:00",
+      "2026-09-03T11:00:00.5+02:00",
+      "2024-02-29T00:00:00Z",
+    ])("accepts the ISO 8601 instant %s unchanged", (dueDate) => {
       expect(createTodoSchema.parse({ title: "t", dueDate })).toEqual({ title: "t", dueDate });
     });
 
     it.each([
-      "2023-02-29",
-      "1900-02-29",
-      "2026-02-30",
-      "2026-04-31",
-      "2026-13-01",
-      "2026-00-10",
-      "2026-01-00",
-      "2026-1-5",
-      "03/01/2026",
-      "2026-03-01T00:00:00Z",
-      "20260301",
+      "2026-09-03",
+      "2026-09-03T15:00:00",
+      "2026-09-03 15:00:00Z",
+      "2026-02-30T00:00:00Z",
+      "2023-02-29T00:00:00Z",
+      "2026-13-01T00:00:00Z",
+      "2026-09-03T24:00:00Z",
+      "03/09/2026 3pm",
+      "1757000000",
       "yesterday",
       "",
     ])("rejects %j", (dueDate) => {
       expect(failingPaths(createTodoSchema, { title: "t", dueDate })).toEqual(["dueDate"]);
     });
 
-    it.each([null, 20260301, true, new Date("2026-03-01")])("rejects non-string %j", (dueDate) => {
-      expect(failingPaths(createTodoSchema, { title: "t", dueDate })).toEqual(["dueDate"]);
+    it("names the format in the message for a bare date", () => {
+      const result = createTodoSchema.safeParse({ title: "t", dueDate: "2026-09-03" });
+      expect(result.success).toBe(false);
+      expect(issuesFromZod(result.error!)[0]!.message).toMatch(/ISO 8601.*offset/);
     });
+
+    it.each([null, 1757000000, true, new Date("2026-09-03T15:00:00Z")])(
+      "rejects non-string %j",
+      (dueDate) => {
+        expect(failingPaths(createTodoSchema, { title: "t", dueDate })).toEqual(["dueDate"]);
+      },
+    );
   });
 
   describe("strictness", () => {
@@ -124,15 +132,22 @@ describe("updateTodoSchema", () => {
   it("accepts each field on its own", () => {
     expect(updateTodoSchema.parse({ title: " t " })).toEqual({ title: "t" });
     expect(updateTodoSchema.parse({ description: "d" })).toEqual({ description: "d" });
-    expect(updateTodoSchema.parse({ dueDate: "2026-03-01" })).toEqual({ dueDate: "2026-03-01" });
+    expect(updateTodoSchema.parse({ dueDate: "2026-03-01T09:00:00Z" })).toEqual({
+      dueDate: "2026-03-01T09:00:00Z",
+    });
     expect(updateTodoSchema.parse({ isCompleted: true })).toEqual({ isCompleted: true });
     expect(updateTodoSchema.parse({ isCompleted: false })).toEqual({ isCompleted: false });
   });
 
   it("accepts all fields together", () => {
     expect(
-      updateTodoSchema.parse({ title: "t", description: "d", dueDate: "2026-03-01", isCompleted: true }),
-    ).toEqual({ title: "t", description: "d", dueDate: "2026-03-01", isCompleted: true });
+      updateTodoSchema.parse({
+        title: "t",
+        description: "d",
+        dueDate: "2026-03-01T09:00:00Z",
+        isCompleted: true,
+      }),
+    ).toEqual({ title: "t", description: "d", dueDate: "2026-03-01T09:00:00Z", isCompleted: true });
   });
 
   it("rejects an empty body with a message naming the requirement", () => {
@@ -165,7 +180,8 @@ describe("updateTodoSchema", () => {
     expect(failingPaths(updateTodoSchema, { description: "x".repeat(2001) })).toEqual([
       "description",
     ]);
-    expect(failingPaths(updateTodoSchema, { dueDate: "2026-02-30" })).toEqual(["dueDate"]);
+    expect(failingPaths(updateTodoSchema, { dueDate: "2026-03-01" })).toEqual(["dueDate"]);
+    expect(failingPaths(updateTodoSchema, { dueDate: "2026-02-30T00:00:00Z" })).toEqual(["dueDate"]);
   });
 
   it.each([null, "true", 1, "yes"])("rejects non-boolean isCompleted %j", (isCompleted) => {
@@ -193,12 +209,4 @@ describe("todoIdParamsSchema", () => {
       expect(failingPaths(todoIdParamsSchema, { id })).toEqual(["id"]);
     },
   );
-});
-
-describe("isCalendarDate", () => {
-  it("checks the format before the calendar", () => {
-    expect(isCalendarDate("2026-03-01")).toBe(true);
-    expect(isCalendarDate("2026-3-1")).toBe(false);
-    expect(isCalendarDate("2026-02-29")).toBe(false);
-  });
 });

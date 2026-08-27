@@ -40,14 +40,14 @@ Change `due_date` from `date` to `timestamptz` with one migration (no data to mo
 
 ### Acceptance criteria
 
-- [ ] Migration alters `todos.due_date` to `timestamptz`; `pnpm db:migrate` and the test global setup apply it cleanly
-- [ ] Schema test: `2026-09-03T15:00:00Z`, `2026-09-03T15:00:00.000Z`, and `2026-09-03T11:00:00-04:00` accepted; `2026-09-03`, `2026-09-03T15:00:00` (no offset), `2026-02-30T00:00:00Z`, and non-strings rejected; `null` still accepted on update and rejected on create
-- [ ] HTTP test: create with `dueDate: "2026-09-03T11:00:00-04:00"` → 201 with `dueDate: "2026-09-03T15:00:00.000Z"` (normalized to UTC), and `GET /todos/:id` returns the same value
-- [ ] HTTP test: create with `dueDate: "2026-09-03"` → 400 with `issues[].path === "dueDate"`
-- [ ] HTTP test: update `dueDate` to a new instant → 200 reflecting it; update to `null` → 200 with `dueDate: null`
-- [ ] Existing create/list/update tests updated to the new format and still green; the calendar-date helper tests are removed with the helpers
-- [ ] `docs/decisions.md` records the reopening and the new wire format; `README.md` field table updated
-- [ ] `pnpm typecheck` and `pnpm test` green
+- [x] Migration alters `todos.due_date` to `timestamptz`; `pnpm db:migrate` and the test global setup apply it cleanly
+- [x] Schema test: `2026-09-03T15:00:00Z`, `2026-09-03T15:00:00.000Z`, and `2026-09-03T11:00:00-04:00` accepted; `2026-09-03`, `2026-09-03T15:00:00` (no offset), `2026-02-30T00:00:00Z`, and non-strings rejected; `null` still accepted on update and rejected on create
+- [x] HTTP test: create with `dueDate: "2026-09-03T11:00:00-04:00"` → 201 with `dueDate: "2026-09-03T15:00:00.000Z"` (normalized to UTC), and `GET /todos/:id` returns the same value
+- [x] HTTP test: create with `dueDate: "2026-09-03"` → 400 with `issues[].path === "dueDate"`
+- [x] HTTP test: update `dueDate` to a new instant → 200 reflecting it; update to `null` → 200 with `dueDate: null`
+- [x] Existing create/list/update tests updated to the new format and still green; the calendar-date helper tests are removed with the helpers
+- [x] `docs/decisions.md` records the reopening and the new wire format; `README.md` field table updated
+- [x] `pnpm typecheck` and `pnpm test` green
 
 ---
 

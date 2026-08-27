@@ -95,7 +95,7 @@ landed in your dev database with `psql -d foci_dev -c '\d todos'`.
 ```sh
 pnpm dev                                   # http://127.0.0.1:3000, reloads on change
 curl -s -X POST localhost:3000/todos -H 'content-type: application/json' \
-  -d '{"title":"Buy milk","dueDate":"2026-09-01"}'
+  -d '{"title":"Buy milk","dueDate":"2026-09-01T17:00:00Z"}'
 curl -s localhost:3000/todos/<id-from-above>
 ```
 
@@ -200,7 +200,7 @@ erDiagram
         uuid id PK
         varchar(200) title
         varchar(2000) description "nullable"
-        date due_date "nullable"
+        timestamptz due_date "nullable"
         boolean is_completed "default false"
         timestamptz created_at "default now()"
         timestamptz updated_at

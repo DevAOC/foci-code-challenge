@@ -43,31 +43,33 @@ describe("/todos", () => {
       expect(res.body.updatedAt).toMatch(ISO_RE);
     });
 
-    it("creates a todo with every field, preserving the calendar date", async () => {
+    it("creates a todo with every field, returning the due instant in UTC", async () => {
       const res = await api.post("/todos", {
         title: "File taxes",
         description: "Federal and provincial",
-        dueDate: "2026-04-30",
+        dueDate: "2026-04-30T17:00:00.000Z",
       });
 
       expect(res.status).toBe(201);
       expect(res.body).toMatchObject({
         title: "File taxes",
         description: "Federal and provincial",
-        dueDate: "2026-04-30",
+        dueDate: "2026-04-30T17:00:00.000Z",
         isCompleted: false,
       });
     });
 
-    it.each(["2024-02-29", "1999-12-31", "2026-01-01"])(
-      "round-trips the date %s without timezone drift",
-      async (dueDate) => {
-        const res = await api.post("/todos", { title: "t", dueDate });
-        expect(res.body.dueDate).toBe(dueDate);
-        const fetched = await api.get(`/todos/${res.body.id}`);
-        expect(fetched.body.dueDate).toBe(dueDate);
-      },
-    );
+    it.each([
+      ["2026-09-03T11:00:00-04:00", "2026-09-03T15:00:00.000Z"],
+      ["2026-09-03T15:00:00Z", "2026-09-03T15:00:00.000Z"],
+      ["2026-09-04T00:30:00.250+09:30", "2026-09-03T15:00:00.250Z"],
+      ["2024-02-29T23:59:59.999Z", "2024-02-29T23:59:59.999Z"],
+    ])("normalizes %s to the UTC instant %s on create and read", async (dueDate, expected) => {
+      const res = await api.post("/todos", { title: "t", dueDate });
+      expect(res.body.dueDate).toBe(expected);
+      const fetched = await api.get(`/todos/${res.body.id}`);
+      expect(fetched.body.dueDate).toBe(expected);
+    });
 
     it("trims the title and stores an empty description as null", async () => {
       const res = await api.post("/todos", { title: "  Walk the dog  ", description: "   " });
@@ -112,12 +114,14 @@ describe("/todos", () => {
         ["2001-character description", { title: "t", description: "x".repeat(2001) }, "description"],
         ["non-string description", { title: "t", description: ["x"] }, "description"],
         ["null description", { title: "t", description: null }, "description"],
-        ["invalid date format", { title: "t", dueDate: "30/04/2026" }, "dueDate"],
-        ["impossible date", { title: "t", dueDate: "2026-02-30" }, "dueDate"],
+        ["invalid date format", { title: "t", dueDate: "30/04/2026 5pm" }, "dueDate"],
+        ["bare calendar date", { title: "t", dueDate: "2026-04-30" }, "dueDate"],
+        ["date-time without offset", { title: "t", dueDate: "2026-04-30T17:00:00" }, "dueDate"],
+        ["impossible date", { title: "t", dueDate: "2026-02-30T00:00:00Z" }, "dueDate"],
         ["null dueDate", { title: "t", dueDate: null }, "dueDate"],
-        ["non-string dueDate", { title: "t", dueDate: 20260430 }, "dueDate"],
+        ["non-string dueDate", { title: "t", dueDate: 1777568400 }, "dueDate"],
         ["isCompleted on create", { title: "t", isCompleted: true }, ""],
-        ["unknown field", { title: "t", duedate: "2026-04-30" }, ""],
+        ["unknown field", { title: "t", duedate: "2026-04-30T17:00:00Z" }, ""],
         ["client-supplied id", { title: "t", id: UNKNOWN_ID }, ""],
       ])("rejects %s with a field error and writes nothing", async (_name, body, path) => {
         const res = await api.post("/todos", body);
@@ -159,7 +163,7 @@ describe("/todos", () => {
       const created = await api.post("/todos", {
         title: "Read",
         description: "A book",
-        dueDate: "2026-05-01",
+        dueDate: "2026-05-01T09:00:00Z",
       });
       const res = await api.get(`/todos/${created.body.id}`);
 
@@ -202,7 +206,7 @@ describe("/todos", () => {
     });
 
     it("returns todos in creation order with the full representation", async () => {
-      const first = await api.post("/todos", { title: "First", dueDate: "2026-01-01" });
+      const first = await api.post("/todos", { title: "First", dueDate: "2026-01-01T00:00:00Z" });
       const second = await api.post("/todos", { title: "Second", description: "d" });
       const third = await api.post("/todos", { title: "Third" });
 
@@ -283,7 +287,11 @@ describe("/todos", () => {
 
   describe("PATCH /todos/:id", () => {
     const seed = () =>
-      api.post("/todos", { title: "Original", description: "Original desc", dueDate: "2026-06-01" });
+      api.post("/todos", {
+        title: "Original",
+        description: "Original desc",
+        dueDate: "2026-06-01T12:00:00.000Z",
+      });
 
     it("updates the title only, trimmed, and leaves everything else", async () => {
       const created = await seed();
@@ -299,10 +307,14 @@ describe("/todos", () => {
       expect(res.body).toEqual({ ...created.body, description: "New desc", updatedAt: res.body.updatedAt });
     });
 
-    it("updates the due date only, preserving the calendar date", async () => {
+    it("updates the due date only, normalizing the offset to UTC", async () => {
       const created = await seed();
-      const res = await api.patch(`/todos/${created.body.id}`, { dueDate: "2024-02-29" });
-      expect(res.body).toEqual({ ...created.body, dueDate: "2024-02-29", updatedAt: res.body.updatedAt });
+      const res = await api.patch(`/todos/${created.body.id}`, { dueDate: "2024-02-29T10:15:00-05:00" });
+      expect(res.body).toEqual({
+        ...created.body,
+        dueDate: "2024-02-29T15:15:00.000Z",
+        updatedAt: res.body.updatedAt,
+      });
     });
 
     it.each([
@@ -343,14 +355,14 @@ describe("/todos", () => {
       const res = await api.patch(`/todos/${created.body.id}`, {
         title: "All",
         description: null,
-        dueDate: "2027-01-01",
+        dueDate: "2027-01-01T00:00:00Z",
         isCompleted: true,
       });
       expect(res.body).toEqual({
         ...created.body,
         title: "All",
         description: null,
-        dueDate: "2027-01-01",
+        dueDate: "2027-01-01T00:00:00.000Z",
         isCompleted: true,
         updatedAt: res.body.updatedAt,
       });
@@ -382,10 +394,11 @@ describe("/todos", () => {
         ["2001-character description", { description: "x".repeat(2001) }, "description"],
         ["non-string description", { description: 5 }, "description"],
         ["invalid date format", { dueDate: "June 1st" }, "dueDate"],
-        ["impossible date", { dueDate: "2026-02-30" }, "dueDate"],
+        ["bare calendar date", { dueDate: "2026-06-01" }, "dueDate"],
+        ["impossible date", { dueDate: "2026-02-30T00:00:00Z" }, "dueDate"],
         ["non-boolean isCompleted", { isCompleted: "yes" }, "isCompleted"],
         ["null isCompleted", { isCompleted: null }, "isCompleted"],
-        ["unknown field", { title: "t", duedate: "2026-06-01" }, ""],
+        ["unknown field", { title: "t", duedate: "2026-06-01T00:00:00Z" }, ""],
         ["client-supplied id", { id: UNKNOWN_ID }, ""],
         ["client-supplied createdAt", { createdAt: "2020-01-01T00:00:00.000Z" }, ""],
       ])("rejects %s and leaves the row untouched", async (_name, body, path) => {

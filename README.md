@@ -64,7 +64,7 @@ A todo looks like:
   "id": "0f5b0f7e-0c3e-4a1e-9c2b-2f9d7d1a3b4c",
   "title": "File taxes",
   "description": "Federal and provincial",
-  "dueDate": "2026-04-30",
+  "dueDate": "2026-04-30T17:00:00.000Z",
   "isCompleted": false,
   "createdAt": "2026-08-27T18:44:39.695Z",
   "updatedAt": "2026-08-27T18:44:39.695Z"
@@ -72,8 +72,9 @@ A todo looks like:
 ```
 
 Rules: `title` is trimmed and must be 1–200 characters; `description` is at most
-2000 characters and an empty string is stored as `null`; `dueDate` is a real
-calendar date in `YYYY-MM-DD`; on `PATCH`, `null` clears `description` or
+2000 characters and an empty string is stored as `null`; `dueDate` is an ISO
+8601 date-time with an explicit offset (`2026-04-30T13:00:00-04:00`) and is
+always returned normalized to UTC; on `PATCH`, `null` clears `description` or
 `dueDate`; unknown fields are rejected. Every error has one shape:
 
 ```json
@@ -93,7 +94,7 @@ One table, `todos`:
 | `id` | `uuid` PK | generated client-side |
 | `title` | `varchar(200)` NOT NULL | |
 | `description` | `varchar(2000)` NULL | |
-| `due_date` | `date` NULL | calendar date, no time of day |
+| `due_date` | `timestamptz` NULL | the instant the todo is due |
 | `is_completed` | `boolean` NOT NULL, default `false` | single source of truth for completion |
 | `created_at` | `timestamptz` NOT NULL, default `now()` | |
 | `updated_at` | `timestamptz` NOT NULL | maintained by Prisma `@updatedAt` |
