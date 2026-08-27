@@ -280,4 +280,152 @@ describe("/todos", () => {
       expect((await api.get("/todos")).body).toEqual({ todos: [keep.body] });
     });
   });
+
+  describe("PATCH /todos/:id", () => {
+    const seed = () =>
+      api.post("/todos", { title: "Original", description: "Original desc", dueDate: "2026-06-01" });
+
+    it("updates the title only, trimmed, and leaves everything else", async () => {
+      const created = await seed();
+      const res = await api.patch(`/todos/${created.body.id}`, { title: "  Renamed  " });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ ...created.body, title: "Renamed", updatedAt: res.body.updatedAt });
+    });
+
+    it("updates the description only", async () => {
+      const created = await seed();
+      const res = await api.patch(`/todos/${created.body.id}`, { description: "New desc" });
+      expect(res.body).toEqual({ ...created.body, description: "New desc", updatedAt: res.body.updatedAt });
+    });
+
+    it("updates the due date only, preserving the calendar date", async () => {
+      const created = await seed();
+      const res = await api.patch(`/todos/${created.body.id}`, { dueDate: "2024-02-29" });
+      expect(res.body).toEqual({ ...created.body, dueDate: "2024-02-29", updatedAt: res.body.updatedAt });
+    });
+
+    it.each([
+      ["description", { description: null }, "description"],
+      ["description via empty string", { description: "" }, "description"],
+      ["dueDate", { dueDate: null }, "dueDate"],
+    ])("clears the %s", async (_name, body, field) => {
+      const created = await seed();
+      const res = await api.patch(`/todos/${created.body.id}`, body);
+      expect(res.status).toBe(200);
+      expect(res.body[field]).toBeNull();
+      const row = await prisma.todo.findUniqueOrThrow({ where: { id: created.body.id } });
+      expect(row[field as "description" | "dueDate"]).toBeNull();
+    });
+
+    it("marks a todo complete and then incomplete without touching other fields", async () => {
+      const created = await seed();
+
+      const done = await api.patch(`/todos/${created.body.id}`, { isCompleted: true });
+      expect(done.status).toBe(200);
+      expect(done.body).toEqual({ ...created.body, isCompleted: true, updatedAt: done.body.updatedAt });
+
+      const undone = await api.patch(`/todos/${created.body.id}`, { isCompleted: false });
+      expect(undone.status).toBe(200);
+      expect(undone.body).toEqual({ ...created.body, isCompleted: false, updatedAt: undone.body.updatedAt });
+    });
+
+    it("is idempotent when completing an already completed todo", async () => {
+      const created = await seed();
+      await api.patch(`/todos/${created.body.id}`, { isCompleted: true });
+      const again = await api.patch(`/todos/${created.body.id}`, { isCompleted: true });
+      expect(again.status).toBe(200);
+      expect(again.body.isCompleted).toBe(true);
+    });
+
+    it("applies several fields at once", async () => {
+      const created = await seed();
+      const res = await api.patch(`/todos/${created.body.id}`, {
+        title: "All",
+        description: null,
+        dueDate: "2027-01-01",
+        isCompleted: true,
+      });
+      expect(res.body).toEqual({
+        ...created.body,
+        title: "All",
+        description: null,
+        dueDate: "2027-01-01",
+        isCompleted: true,
+        updatedAt: res.body.updatedAt,
+      });
+    });
+
+    it("advances updatedAt and keeps createdAt", async () => {
+      const created = await seed();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      const res = await api.patch(`/todos/${created.body.id}`, { title: "Later" });
+      expect(res.body.createdAt).toBe(created.body.createdAt);
+      expect(new Date(res.body.updatedAt).getTime()).toBeGreaterThan(
+        new Date(created.body.updatedAt).getTime(),
+      );
+    });
+
+    it("is reflected by a subsequent GET", async () => {
+      const created = await seed();
+      const patched = await api.patch(`/todos/${created.body.id}`, { title: "Fetched" });
+      expect((await api.get(`/todos/${created.body.id}`)).body).toEqual(patched.body);
+    });
+
+    describe("rejections", () => {
+      it.each([
+        ["empty body", {}, ""],
+        ["null title", { title: null }, "title"],
+        ["empty title", { title: "" }, "title"],
+        ["whitespace-only title", { title: "  " }, "title"],
+        ["201-character title", { title: "x".repeat(201) }, "title"],
+        ["2001-character description", { description: "x".repeat(2001) }, "description"],
+        ["non-string description", { description: 5 }, "description"],
+        ["invalid date format", { dueDate: "June 1st" }, "dueDate"],
+        ["impossible date", { dueDate: "2026-02-30" }, "dueDate"],
+        ["non-boolean isCompleted", { isCompleted: "yes" }, "isCompleted"],
+        ["null isCompleted", { isCompleted: null }, "isCompleted"],
+        ["unknown field", { title: "t", duedate: "2026-06-01" }, ""],
+        ["client-supplied id", { id: UNKNOWN_ID }, ""],
+        ["client-supplied createdAt", { createdAt: "2020-01-01T00:00:00.000Z" }, ""],
+      ])("rejects %s and leaves the row untouched", async (_name, body, path) => {
+        const created = await seed();
+        const before = await prisma.todo.findUniqueOrThrow({ where: { id: created.body.id } });
+
+        const res = await api.patch(`/todos/${created.body.id}`, body);
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatchObject({ statusCode: 400, code: "VALIDATION_ERROR" });
+        expect(res.body.error.issues.map((issue: { path: string }) => issue.path)).toContain(path);
+        const after = await prisma.todo.findUniqueOrThrow({ where: { id: created.body.id } });
+        expect(after).toEqual(before);
+      });
+
+      it("rejects malformed JSON", async () => {
+        const created = await seed();
+        const res = await app.inject({
+          method: "PATCH",
+          url: `/todos/${created.body.id}`,
+          headers: { "content-type": "application/json" },
+          payload: "{oops",
+        });
+        expect(res.statusCode).toBe(400);
+        expect(JSON.parse(res.body).error.code).toBe("VALIDATION_ERROR");
+      });
+
+      it("returns 404 NOT_FOUND for an unknown UUID", async () => {
+        const res = await api.patch(`/todos/${UNKNOWN_ID}`, { title: "Ghost" });
+        expect(res.status).toBe(404);
+        expect(res.body).toEqual({
+          error: { statusCode: 404, code: "NOT_FOUND", message: `Todo ${UNKNOWN_ID} not found` },
+        });
+      });
+
+      it("validates the id before the body", async () => {
+        const res = await api.patch("/todos/not-a-uuid", {});
+        expect(res.status).toBe(400);
+        expect(res.body.error.issues).toEqual([{ path: "id", message: expect.any(String) }]);
+      });
+    });
+  });
 });

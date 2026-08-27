@@ -57,9 +57,6 @@ to one call:
 | Incomplete | `PATCH /todos/:id` `{ "isCompleted": false }` | `200` + todo | `400`, `404` |
 | Delete | `DELETE /todos/:id` | `204` | `400`, `404` |
 
-> `GET /todos`, `PATCH`, and `DELETE` land in the next PR
-> (phases 4–5 of [`plans/todo-api.md`](./plans/todo-api.md)).
-
 A todo looks like:
 
 ```json

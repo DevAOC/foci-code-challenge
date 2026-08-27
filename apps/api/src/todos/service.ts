@@ -2,8 +2,8 @@
 // nothing else; Prisma-specific behaviour (not-found errors, date columns) is
 // translated here so it never leaks into the HTTP layer.
 import { NotFoundError } from "../http/errors.js";
-import type { PrismaClient, Todo } from "../generated/prisma/client.js";
-import type { CreateTodoInput } from "./schemas.js";
+import { Prisma, type PrismaClient, type Todo } from "../generated/prisma/client.js";
+import type { CreateTodoInput, UpdateTodoInput } from "./schemas.js";
 import { parseCalendarDate } from "./serialize.js";
 
 export async function createTodo(prisma: PrismaClient, input: CreateTodoInput): Promise<Todo> {
@@ -33,5 +33,29 @@ export async function deleteTodo(prisma: PrismaClient, id: string): Promise<void
   const { count } = await prisma.todo.deleteMany({ where: { id } });
   if (count === 0) {
     throw new NotFoundError(`Todo ${id} not found`);
+  }
+}
+
+export async function updateTodo(
+  prisma: PrismaClient,
+  id: string,
+  input: UpdateTodoInput,
+): Promise<Todo> {
+  // Only fields present in the input are written; an explicit null clears the column.
+  const data: Prisma.TodoUpdateInput = {};
+  if (input.title !== undefined) data.title = input.title;
+  if (input.description !== undefined) data.description = input.description;
+  if (input.dueDate !== undefined) {
+    data.dueDate = input.dueDate === null ? null : parseCalendarDate(input.dueDate);
+  }
+  if (input.isCompleted !== undefined) data.isCompleted = input.isCompleted;
+
+  try {
+    return await prisma.todo.update({ where: { id }, data });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      throw new NotFoundError(`Todo ${id} not found`);
+    }
+    throw error;
   }
 }

@@ -1,8 +1,8 @@
 // HTTP layer for /todos: parse, validate, delegate to the service, serialize.
 import type { FastifyInstance } from "fastify";
-import { createTodoSchema, todoIdParamsSchema } from "./schemas.js";
+import { createTodoSchema, todoIdParamsSchema, updateTodoSchema } from "./schemas.js";
 import { serializeTodo } from "./serialize.js";
-import { createTodo, deleteTodo, getTodoById, listTodos } from "./service.js";
+import { createTodo, deleteTodo, getTodoById, listTodos, updateTodo } from "./service.js";
 
 export async function todoRoutes(app: FastifyInstance): Promise<void> {
   app.post("/todos", async (request, reply) => {
@@ -19,6 +19,12 @@ export async function todoRoutes(app: FastifyInstance): Promise<void> {
   app.get("/todos/:id", async (request) => {
     const { id } = todoIdParamsSchema.parse(request.params);
     return serializeTodo(await getTodoById(app.prisma, id));
+  });
+
+  app.patch("/todos/:id", async (request) => {
+    const { id } = todoIdParamsSchema.parse(request.params);
+    const input = updateTodoSchema.parse(request.body);
+    return serializeTodo(await updateTodo(app.prisma, id, input));
   });
 
   app.delete("/todos/:id", async (request, reply) => {
