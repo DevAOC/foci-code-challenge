@@ -4,11 +4,11 @@ Everything you need to go from a fresh clone to green tests on macOS.
 
 ## 1. Prerequisites
 
-| Tool | Version | Install |
-|---|---|---|
-| Node.js | 24+ | `brew install node` (or a version manager) |
-| pnpm | 11+ | `corepack enable` or `brew install pnpm` |
-| PostgreSQL | 18 | `brew install postgresql@18` |
+| Tool       | Version | Install                                    |
+| ---------- | ------- | ------------------------------------------ |
+| Node.js    | 24+     | `brew install node` (or a version manager) |
+| pnpm       | 11+     | `corepack enable` or `brew install pnpm`   |
+| PostgreSQL | 18      | `brew install postgresql@18`               |
 
 Check what you have:
 
@@ -38,9 +38,9 @@ echo 'export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"' >> ~/.zshrc
 
 The project uses two databases so tests can never touch development data:
 
-| Database | Purpose |
-|---|---|
-| `foci_dev` | Local development |
+| Database    | Purpose                                              |
+| ----------- | ---------------------------------------------------- |
+| `foci_dev`  | Local development                                    |
 | `foci_test` | Used exclusively by `pnpm test`; wiped between tests |
 
 Create them once:
@@ -92,14 +92,14 @@ Both commands must be green before committing.
 
 All commands run from the repository root.
 
-| Command | What it does |
-|---|---|
-| `pnpm typecheck` | Type-check every workspace package |
-| `pnpm test` | Run every test suite |
-| `pnpm --filter @foci/api test -- src/db/connectivity.test.ts` | Run a single test file |
-| `pnpm --filter @foci/api exec vitest` | Run tests in watch mode |
-| `pnpm db:setup` | Create `foci_dev` / `foci_test` if they don't exist |
-| `pnpm db:migrate` | Apply pending migrations to `foci_dev` (`prisma migrate dev`) |
+| Command                                                       | What it does                                                  |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
+| `pnpm typecheck`                                              | Type-check every workspace package                            |
+| `pnpm test`                                                   | Run every test suite                                          |
+| `pnpm --filter @foci/api test -- src/db/connectivity.test.ts` | Run a single test file                                        |
+| `pnpm --filter @foci/api exec vitest`                         | Run tests in watch mode                                       |
+| `pnpm db:setup`                                               | Create `foci_dev` / `foci_test` if they don't exist           |
+| `pnpm db:migrate`                                             | Apply pending migrations to `foci_dev` (`prisma migrate dev`) |
 
 ## Migrations
 
@@ -107,13 +107,13 @@ The schema lives in `apps/api/prisma/schema.prisma`; every change to it ships
 as a SQL migration under `apps/api/prisma/migrations/`. Never edit the database
 by hand.
 
-| Task | Command (from the repo root) |
-|---|---|
-| Apply pending migrations to `foci_dev` | `pnpm db:migrate` |
+| Task                                            | Command (from the repo root)                                                 |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| Apply pending migrations to `foci_dev`          | `pnpm db:migrate`                                                            |
 | Create a new migration after editing the schema | `pnpm --filter @foci/api exec prisma migrate dev --name <short_description>` |
-| Apply migrations to `foci_test` manually | `pnpm --filter @foci/api db:migrate:test` (tests do this automatically) |
-| Drop and recreate `foci_dev` from scratch | `pnpm --filter @foci/api db:reset` |
-| Inspect the live table | `psql -d foci_dev -c '\d todos'` |
+| Apply migrations to `foci_test` manually        | `pnpm --filter @foci/api db:migrate:test` (tests do this automatically)      |
+| Drop and recreate `foci_dev` from scratch       | `pnpm --filter @foci/api db:reset`                                           |
+| Inspect the live table                          | `psql -d foci_dev -c '\d todos'`                                             |
 
 `prisma migrate dev` both writes the migration file and applies it, then
 regenerates the Prisma client. Commit the generated `migration.sql` alongside
@@ -128,7 +128,7 @@ the schema change.
   database.
 - Tests use a real Postgres connection; nothing is mocked.
 
-## Looking at the database
+## Viewing the database
 
 ### From the terminal
 
@@ -155,18 +155,18 @@ rows. Good for inspecting data; it doesn't show structure.
 
 Any Postgres client works. Connection details for all of them:
 
-| Field | Value |
-|---|---|
-| Host | `localhost` |
-| Port | `5432` |
-| Database | `foci_dev` (or `foci_test`) |
-| User | your macOS username (`whoami`) |
-| Password | none |
+| Field    | Value                          |
+| -------- | ------------------------------ |
+| Host     | `localhost`                    |
+| Port     | `5432`                         |
+| Database | `foci_dev` (or `foci_test`)    |
+| User     | your macOS username (`whoami`) |
+| Password | none                           |
 
 - **TablePlus** — `brew install --cask tableplus`; lightweight and macOS-native.
 - **Postico** — Postgres-only, similar feel.
 - **DBeaver** / **pgAdmin** — heavier, free; DBeaver can draw ER diagrams.
-- **VS Code** — the *PostgreSQL* extension (`ms-ossdata.vscode-pgsql`) adds a
+- **VS Code** — the _PostgreSQL_ extension (`ms-ossdata.vscode-pgsql`) adds a
   schema explorer and query panel to the sidebar.
 
 ### Entity diagram
