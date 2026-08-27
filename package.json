@@ -7,7 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "pnpm --filter @foci/api dev",
+    "dev": "pnpm -r --parallel dev",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "db:setup": "pnpm --filter @foci/api db:setup",

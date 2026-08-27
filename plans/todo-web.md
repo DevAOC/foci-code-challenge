@@ -81,17 +81,17 @@ The first web tracer bullet: a running `@foci/web` that renders the real todos f
 
 ### Acceptance criteria
 
-- [ ] `pnpm dev` at the root starts the API and the web app; the browser at the Vite URL shows todos created via the API; `/api/todos` proxies to `/todos`
-- [ ] `pnpm typecheck`, `pnpm test`, and `pnpm --filter @foci/web build` green; `pnpm --filter @foci/web test:coverage` runs
-- [ ] App test: three todos from the fake API render as three cards in the order received, each showing title, formatted due date, and description
-- [ ] App test: a todo with `description: null` and `dueDate: null` renders neither line
-- [ ] App test: a completed todo is rendered with done styling (assert via an accessible state or class contract, not a snapshot)
-- [ ] App test: skeleton cards are shown while the list request is pending
-- [ ] App test: an empty list shows the empty state with a "create your first todo" action
-- [ ] App test: a failed list request shows an inline error with Retry; clicking Retry refetches and shows the cards
-- [ ] Client test: 2xx JSON is returned typed; 204 resolves to `undefined`; a 4xx/5xx envelope becomes `ApiError` with `statusCode`, `code`, `message`, `issues`; a network failure rejects with a non-`ApiError` error
-- [ ] Formatter test: renders in the browser's zone; omits the year when current; appends it otherwise; overdue is true only when past and incomplete; a fixed `TZ` in the test config makes results deterministic
-- [ ] No `VITE_*` variables; no CORS added to the API
+- [x] `pnpm dev` at the root starts the API and the web app; the browser at the Vite URL shows todos created via the API; `/api/todos` proxies to `/todos`
+- [x] `pnpm typecheck`, `pnpm test`, and `pnpm --filter @foci/web build` green; `pnpm --filter @foci/web test:coverage` runs
+- [x] App test: three todos from the fake API render as three cards in the order received, each showing title, formatted due date, and description
+- [x] App test: a todo with `description: null` and `dueDate: null` renders neither line
+- [x] App test: a completed todo is rendered with done styling (assert via an accessible state or class contract, not a snapshot)
+- [x] App test: skeleton cards are shown while the list request is pending
+- [x] App test: an empty list shows the empty state with a "create your first todo" action
+- [x] App test: a failed list request shows an inline error with Retry; clicking Retry refetches and shows the cards
+- [x] Client test: 2xx JSON is returned typed; 204 resolves to `undefined`; a 4xx/5xx envelope becomes `ApiError` with `statusCode`, `code`, `message`, `issues`; a network failure rejects with a non-`ApiError` error
+- [x] Formatter test: renders in the browser's zone; omits the year when current; appends it otherwise; overdue is true only when past and incomplete; a fixed `TZ` in the test config makes results deterministic
+- [x] No `VITE_*` variables; no CORS added to the API
 
 ---
 
@@ -105,16 +105,16 @@ Wire the **New** button and the empty-state CTA to a modal containing `TodoForm`
 
 ### Acceptance criteria
 
-- [ ] App test: click New → a dialog with labelled Title, Description, and Due inputs and focus inside it; Escape closes it and returns focus to New
-- [ ] App test: fill title and submit → `POST /todos` body is exactly the parsed schema output (trimmed title, `"" → null` description, no `dueDate` key when blank); the dialog closes and the new card appears
-- [ ] App test: enter a local date-time → the request's `dueDate` is the corresponding ISO instant with `Z` offset
-- [ ] App test: whitespace-only title → no request; "Title must not be empty" shown under the field and linked via `aria-describedby`
-- [ ] App test: 201-char title / 2001-char description → no request; the length message shown under the field
-- [ ] App test: fake API returns 400 with `issues: [{ path: "title", … }]` → message under Title, dialog stays open
-- [ ] App test: fake API returns 500 → generic message at the top of the form, dialog stays open, entered values preserved
-- [ ] App test: Save is disabled and shows a pending state while the request is in flight; pressing Enter in the title field submits
-- [ ] App test: the empty-state CTA opens the same dialog
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green
+- [x] App test: click New → a dialog with labelled Title, Description, and Due inputs and focus inside it; Escape closes it and returns focus to New
+- [x] App test: fill title and submit → `POST /todos` body is exactly the parsed schema output (trimmed title, `"" → null` description, no `dueDate` key when blank); the dialog closes and the new card appears
+- [x] App test: enter a local date-time → the request's `dueDate` is the corresponding ISO instant with `Z` offset
+- [x] App test: whitespace-only title → no request; "Title must not be empty" shown under the field and linked via `aria-describedby`
+- [x] App test: 201-char title / 2001-char description → no request; the length message shown under the field
+- [x] App test: fake API returns 400 with `issues: [{ path: "title", … }]` → message under Title, dialog stays open
+- [x] App test: fake API returns 500 → generic message at the top of the form, dialog stays open, entered values preserved
+- [x] App test: Save is disabled and shows a pending state while the request is in flight; pressing Enter in the title field submits
+- [x] App test: the empty-state CTA opens the same dialog
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green
 
 ---
 
@@ -128,16 +128,16 @@ Clicking a card's open-button opens the same modal in edit mode, prefilled from 
 
 ### Acceptance criteria
 
-- [ ] App test: click a card → dialog prefilled with its title, description, local due date-time, and completed state; Save disabled
-- [ ] App test: change only the title → `PATCH` body is `{ title }` and nothing else; card shows the new title after close
-- [ ] App test: clear description and due → `PATCH` body is `{ description: null, dueDate: null }`
-- [ ] App test: tick Completed in the form → `PATCH` body is `{ isCompleted: true }`
-- [ ] App test: revert a change to its original value → Save disabled again
-- [ ] App test: fake API returns 404 on `PATCH` → not-found message shown; list refetched and the stale card gone
-- [ ] App test: 400 `issues` and 500 on save behave as in phase 3
-- [ ] App test: click Delete → inline confirmation replaces the footer, no request yet; Cancel restores the footer; confirm → `DELETE /todos/:id`, dialog closes, card gone
-- [ ] App test: keyboard — Tab to a card's open-button and press Enter opens the dialog
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green
+- [x] App test: click a card → dialog prefilled with its title, description, local due date-time, and completed state; Save disabled
+- [x] App test: change only the title → `PATCH` body is `{ title }` and nothing else; card shows the new title after close
+- [x] App test: clear description and due → `PATCH` body is `{ description: null, dueDate: null }`
+- [x] App test: tick Completed in the form → `PATCH` body is `{ isCompleted: true }`
+- [x] App test: revert a change to its original value → Save disabled again
+- [x] App test: fake API returns 404 on `PATCH` → not-found message shown; list refetched and the stale card gone
+- [x] App test: 400 `issues` and 500 on save behave as in phase 3
+- [x] App test: click Delete → inline confirmation replaces the footer, no request yet; Cancel restores the footer; confirm → `DELETE /todos/:id`, dialog closes, card gone
+- [x] App test: keyboard — Tab to a card's open-button and press Enter opens the dialog
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green
 
 ---
 
@@ -151,13 +151,13 @@ Add the sibling checkbox to each card. Ticking sends `PATCH /todos/:id { isCompl
 
 ### Acceptance criteria
 
-- [ ] App test: tick a card's checkbox → `PATCH` body `{ isCompleted: true }`; the card shows done styling before the response resolves; untick → `{ isCompleted: false }`
-- [ ] App test: fake API returns 500 → the checkbox and styling roll back and a toast with `role="status"`/`alert` appears with a "couldn't update" message
-- [ ] App test: the completed card keeps its position in the list
-- [ ] App test: clicking the checkbox does not open the dialog; clicking the card body does not change the checkbox
-- [ ] App test: keyboard — Tab reaches the checkbox before the open-button; Space toggles it
-- [ ] The checkbox has an accessible name that includes the todo's title
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green
+- [x] App test: tick a card's checkbox → `PATCH` body `{ isCompleted: true }`; the card shows done styling before the response resolves; untick → `{ isCompleted: false }`
+- [x] App test: fake API returns 500 → the checkbox and styling roll back and a toast with `role="status"`/`alert` appears with a "couldn't update" message
+- [x] App test: the completed card keeps its position in the list
+- [x] App test: clicking the checkbox does not open the dialog; clicking the card body does not change the checkbox
+- [x] App test: keyboard — Tab reaches the checkbox before the open-button; Space toggles it
+- [x] The checkbox has an accessible name that includes the todo's title
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green
 
 ---
 
@@ -171,8 +171,8 @@ Make it look like the brief: apply the Stripe-like tokens (ground, type, borders
 
 ### Acceptance criteria
 
-- [ ] App test: an incomplete todo with a past due date renders its due date with the overdue treatment; a completed past-due todo does not
-- [ ] Every interactive element has a visible focus ring; the a11y checklist in the PRD is met and any gaps are fixed with tests where behaviour changed
-- [ ] `pnpm --filter @foci/web test:coverage` reports on all web source with no untested module
-- [ ] `README.md`, `DEVELOPMENT.md`, `CLAUDE.md`, and `docs/decisions.md` updated as listed
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green; PR B opened
+- [x] App test: an incomplete todo with a past due date renders its due date with the overdue treatment; a completed past-due todo does not
+- [x] Every interactive element has a visible focus ring; the a11y checklist in the PRD is met and any gaps are fixed with tests where behaviour changed
+- [x] `pnpm --filter @foci/web test:coverage` reports on all web source with no untested module
+- [x] `README.md`, `DEVELOPMENT.md`, `CLAUDE.md`, and `docs/decisions.md` updated as listed
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green; PR B opened

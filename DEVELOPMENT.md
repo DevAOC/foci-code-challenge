@@ -90,19 +90,23 @@ pnpm test        # generates the Prisma client, then vitest against foci_test
 `typecheck` and `test` must be green before committing. Confirm the table
 landed in your dev database with `psql -d foci_dev -c '\d todos'`.
 
-## 6. Run the API
+## 6. Run the app
 
 ```sh
-pnpm dev                                   # http://127.0.0.1:3000, reloads on change
+pnpm dev                                   # API on http://127.0.0.1:3000 + web on http://localhost:5173
 curl -s -X POST localhost:3000/todos -H 'content-type: application/json' \
   -d '{"title":"Buy milk","dueDate":"2026-09-01T17:00:00Z"}'
 curl -s localhost:3000/todos/<id-from-above>
+open http://localhost:5173                 # the todo list
 ```
 
-The port comes from `PORT` in `apps/api/.env` (default `3000`). The server
-binds to `127.0.0.1` only and shuts down cleanly on Ctrl-C, closing its
-database connections. Requests are logged as JSON lines to stdout. The full
-endpoint list is in the [README](./README.md#endpoints).
+`pnpm dev` starts both packages in parallel. The API port comes from `PORT` in
+`apps/api/.env` (default `3000`); it binds to `127.0.0.1` only, shuts down
+cleanly on Ctrl-C, and logs requests as JSON lines. The web app is served by
+Vite on `localhost:5173`; the browser calls relative `/api/*` URLs and Vite's
+dev proxy forwards them to the API with the `/api` prefix stripped, so there is
+no CORS configuration and no `VITE_*` environment variable. The full endpoint
+list is in the [README](./README.md#endpoints).
 
 ## Everyday commands
 
@@ -110,10 +114,12 @@ All commands run from the repository root.
 
 | Command                                                       | What it does                                                  |
 | ------------------------------------------------------------- | ------------------------------------------------------------- |
-| `pnpm dev`                                                    | Start the API with reload (`tsx watch`)                       |
+| `pnpm dev`                                                    | Start the API (`tsx watch`) and the web app (Vite) together  |
 | `pnpm typecheck`                                              | Type-check every workspace package                            |
 | `pnpm test`                                                   | Run every test suite                                          |
 | `pnpm --filter @foci/api test:coverage`                       | Tests plus a coverage report for the API modules              |
+| `pnpm --filter @foci/web test:coverage`                       | Tests plus a coverage report for the web app                  |
+| `pnpm --filter @foci/web build`                               | Type-check and bundle the web app to `apps/web/dist` (nothing serves it yet) |
 | `pnpm --filter @foci/api test -- src/db/connectivity.test.ts` | Run a single test file                                        |
 | `pnpm --filter @foci/api exec vitest`                         | Run tests in watch mode                                       |
 | `pnpm db:setup`                                               | Create `foci_dev` / `foci_test` if they don't exist           |
@@ -148,6 +154,12 @@ the schema change.
 - API tests call the Fastify app in-process through `app.inject()` (wrapped by
   `apps/api/src/test/http.ts`), so no port is opened and the same database
   lifecycle applies.
+- Web tests (`apps/web`) never touch the database or a port: they render the
+  whole app under jsdom with React Testing Library and answer its `fetch`
+  calls with [MSW](https://mswjs.io) handlers declared per test
+  (`apps/web/src/test/`). Handlers are typed against `@foci/contracts`, so the
+  fake API can only return what the real one would. `TZ` is pinned in
+  `vite.config.ts` so due-date formatting is deterministic.
 
 ## Viewing the database
 
