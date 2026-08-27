@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "dev": "tsx watch src/server.ts",
     "typecheck": "prisma generate && tsc --noEmit",
     "test": "prisma generate && vitest run",
     "db:setup": "./scripts/db-setup.sh",
@@ -15,12 +16,16 @@
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "dotenv": "^17.4.2",
-    "pg": "^8.23.0"
+    "fastify": "^5.12.1",
+    "pg": "^8.23.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/pg": "^8.23.1",
+    "@vitest/coverage-v8": "^4.1.11",
     "dotenv-cli": "^11.0.0",
     "prisma": "^7.10.0",
+    "tsx": "^4.23.12",
     "vitest": "^4.1.11"
   }
 }
