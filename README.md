@@ -4,8 +4,9 @@ A small todo-list application built as a code challenge. The stack is
 TypeScript end to end: a Node.js API backed by PostgreSQL through Prisma, and
 (later) a React front end, organised as a pnpm monorepo.
 
-The project is being built deliberately in thin, reviewable slices. The current
-slice is the **database layer only** — there is no HTTP server yet.
+The project is being built deliberately in thin, reviewable slices: the
+database layer first, then the **HTTP API** (in progress — see
+[Endpoints](#endpoints)), then the UI.
 
 ## Stack
 
@@ -21,8 +22,8 @@ slice is the **database layer only** — there is no HTTP server yet.
 
 ```
 apps/
-  api/          Home of Prisma, the schema, migrations and database tests.
-                Will also host the HTTP API in a later slice.
+  api/          The Fastify HTTP API plus Prisma: schema, migrations, and tests.
+docs/           Design decisions and their rejected alternatives.
 plans/          Phased implementation plans (tracer-bullet slices).
 ```
 
@@ -35,10 +36,53 @@ cp apps/api/.env.example apps/api/.env   # then replace <macos-user> with `whoam
 pnpm db:migrate                     # apply migrations to foci_dev
 pnpm typecheck
 pnpm test
+pnpm dev                            # API on http://127.0.0.1:3000
 ```
 
 Full setup instructions, including installing Postgres and troubleshooting, are
 in [DEVELOPMENT.md](./DEVELOPMENT.md).
+
+## Endpoints
+
+JSON in, JSON out, under `/todos`. Each capability from the challenge brief maps
+to one call:
+
+| Capability | Request | Success | Errors |
+|---|---|---|---|
+| Add | `POST /todos` `{ title, description?, dueDate? }` | `201` + todo | `400` |
+| List | `GET /todos` | `200` + `{ "todos": [ … ] }` | — |
+| View | `GET /todos/:id` | `200` + todo | `400` non-UUID id, `404` |
+| Update | `PATCH /todos/:id` `{ title?, description?, dueDate? }` | `200` + todo | `400`, `404` |
+| Complete | `PATCH /todos/:id` `{ "isCompleted": true }` | `200` + todo | `400`, `404` |
+| Incomplete | `PATCH /todos/:id` `{ "isCompleted": false }` | `200` + todo | `400`, `404` |
+| Delete | `DELETE /todos/:id` | `204` | `400`, `404` |
+
+A todo looks like:
+
+```json
+{
+  "id": "0f5b0f7e-0c3e-4a1e-9c2b-2f9d7d1a3b4c",
+  "title": "File taxes",
+  "description": "Federal and provincial",
+  "dueDate": "2026-04-30",
+  "isCompleted": false,
+  "createdAt": "2026-08-27T18:44:39.695Z",
+  "updatedAt": "2026-08-27T18:44:39.695Z"
+}
+```
+
+Rules: `title` is trimmed and must be 1–200 characters; `description` is at most
+2000 characters and an empty string is stored as `null`; `dueDate` is a real
+calendar date in `YYYY-MM-DD`; on `PATCH`, `null` clears `description` or
+`dueDate`; unknown fields are rejected. Every error has one shape:
+
+```json
+{ "error": { "statusCode": 400, "code": "VALIDATION_ERROR", "message": "Request is invalid",
+             "issues": [ { "path": "title", "message": "Title must not be empty" } ] } }
+```
+
+`code` is `VALIDATION_ERROR` (400), `NOT_FOUND` (404), or `INTERNAL_ERROR`
+(500); `issues` appears only on validation errors.
 
 ## Data model
 

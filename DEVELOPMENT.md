@@ -90,8 +90,19 @@ pnpm test        # generates the Prisma client, then vitest against foci_test
 `typecheck` and `test` must be green before committing. Confirm the table
 landed in your dev database with `psql -d foci_dev -c '\d todos'`.
 
-There is no `pnpm dev` yet — this slice of the project is the database layer
-only. The HTTP server arrives with the API work tracked in issue #3.
+## 6. Run the API
+
+```sh
+pnpm dev                                   # http://127.0.0.1:3000, reloads on change
+curl -s -X POST localhost:3000/todos -H 'content-type: application/json' \
+  -d '{"title":"Buy milk","dueDate":"2026-09-01"}'
+curl -s localhost:3000/todos/<id-from-above>
+```
+
+The port comes from `PORT` in `apps/api/.env` (default `3000`). The server
+binds to `127.0.0.1` only and shuts down cleanly on Ctrl-C, closing its
+database connections. Requests are logged as JSON lines to stdout. The full
+endpoint list is in the [README](./README.md#endpoints).
 
 ## Everyday commands
 
@@ -99,8 +110,10 @@ All commands run from the repository root.
 
 | Command                                                       | What it does                                                  |
 | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| `pnpm dev`                                                    | Start the API with reload (`tsx watch`)                       |
 | `pnpm typecheck`                                              | Type-check every workspace package                            |
 | `pnpm test`                                                   | Run every test suite                                          |
+| `pnpm --filter @foci/api test:coverage`                       | Tests plus a coverage report for the API modules              |
 | `pnpm --filter @foci/api test -- src/db/connectivity.test.ts` | Run a single test file                                        |
 | `pnpm --filter @foci/api exec vitest`                         | Run tests in watch mode                                       |
 | `pnpm db:setup`                                               | Create `foci_dev` / `foci_test` if they don't exist           |
@@ -132,6 +145,9 @@ the schema change.
 - Test files run serially (`fileParallelism: false`) because they share one
   database.
 - Tests use a real Postgres connection; nothing is mocked.
+- API tests call the Fastify app in-process through `app.inject()` (wrapped by
+  `apps/api/src/test/http.ts`), so no port is opened and the same database
+  lifecycle applies.
 
 ## Viewing the database
 

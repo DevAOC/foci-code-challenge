@@ -1,9 +1,10 @@
 # Design decisions
 
 Each decision below records what was chosen, what was rejected, and why. They
-came out of a structured design review before any code was written, and are
-mirrored in [GitHub issue #1](https://github.com/DevAOC/foci-code-challenge/issues/1)
-and [`plans/todo-persistence.md`](../plans/todo-persistence.md). Don't
+came out of structured design reviews before any code was written, and are
+mirrored in GitHub issues [#1](https://github.com/DevAOC/foci-code-challenge/issues/1)
+(database) and [#3](https://github.com/DevAOC/foci-code-challenge/issues/3)
+(HTTP API), and in [`plans/`](../plans/). Don't
 re-litigate them without new information — but do add a new entry when
 something changes.
 
@@ -109,3 +110,83 @@ TypeScript.
 **Why:** manual reordering is the one "small" feature that quietly forces
 renumbering logic — it is not a requirement. Indexes are deferred until the
 sorting/filtering feature exists and can decide what to index.
+
+## HTTP API
+
+Decided in the API design review of 2026-08-27 (issue #3,
+[`plans/todo-api.md`](../plans/todo-api.md)).
+
+### Fastify over Express
+**Chosen:** Fastify 5.
+**Rejected:** Express.
+**Why:** `app.inject()` gives in-process HTTP tests with no port and no
+`supertest`, which is the primary test seam; async handlers and a single
+`setErrorHandler` are first-class; Express needs extra wrappers for both and
+is showing its age.
+
+### Complete / Incomplete are `PATCH { isCompleted }`, not action endpoints
+**Chosen:** `PATCH /todos/:id` with `{ "isCompleted": true | false }`.
+**Rejected:** `POST /todos/:id/complete` and `/incomplete` alongside `PATCH`;
+action endpoints only.
+**Why:** completion is one boolean field flipped from a toggle; a dedicated
+endpoint per direction adds routes without adding behaviour. The README maps
+the brief's "Complete" and "Incomplete" rows to the PATCH call so nothing is
+lost for a reviewer.
+
+### One error body, with `statusCode` inside it
+**Chosen:** every non-2xx response is
+`{ error: { statusCode, code, message, issues? } }`, where `code` is
+`VALIDATION_ERROR` / `NOT_FOUND` / `INTERNAL_ERROR` and `issues` is a
+`[{ path, message }]` list present only on validation errors. Fastify's own
+404s and malformed-JSON 400s are rendered in the same shape. 500s never expose
+the underlying message.
+**Rejected:** omitting `statusCode` from the body (it duplicates the response
+line); Fastify's default `{ statusCode, error, message }`; a per-field map
+`errors: { title: [...] }`.
+**Why:** one shape means one client-side error path; `code` is the stable
+discriminator (several 400s can differ by `code` later); the duplicated
+`statusCode` makes a logged or serialized body self-describing. A malformed
+`:id` is a validation error on `path: "id"`, not a 404, so "bad input" and
+"absent resource" never blur.
+
+### Strict request bodies
+**Chosen:** zod `strictObject` for create and update — unknown keys are 400.
+`PATCH {}` is 400; `title: null` is 400; `null` is only valid to clear
+`description` or `dueDate`.
+**Rejected:** zod's default of silently stripping unknown keys.
+**Why:** a client that misspells `dueDate` and gets a 200 has a bug that will
+never surface; failing loudly is cheaper than debugging silence.
+
+### List returns an envelope in a fixed order
+**Chosen:** `GET /todos` → `{ "todos": [ … ] }`, full representation per item,
+ordered by `createdAt` ascending then `id` ascending.
+**Rejected:** a bare JSON array; a slimmer list DTO; no explicit `orderBy`.
+**Why:** the next feature is sorting/filtering/pagination and an envelope can
+grow `nextCursor` / `total` without breaking clients; a second DTO for seven
+fields is not worth maintaining; Postgres guarantees no order without
+`ORDER BY`, and `id` breaks ties so tests are deterministic.
+
+### One `todos` module between routes and Prisma
+**Chosen:** routes parse, validate, delegate, and serialize; a single
+`todos/service.ts` owns every Prisma call and translates "no such row" into a
+typed `NotFoundError`; `todos/serialize.ts` owns the wire shape.
+**Rejected:** routes calling Prisma directly; a repository *and* a service
+layer.
+**Why:** there are no business rules beyond validation, so a second layer would
+be ceremony; but not-found translation and date formatting must exist exactly
+once, which rules out inlining Prisma in five handlers.
+
+### Validation schemas stay in the API package
+**Chosen:** zod schemas live in `apps/api/src/todos/schemas.ts`, free of
+Prisma and Fastify imports.
+**Rejected:** a shared `packages/contracts` workspace package now; OpenAPI +
+generated client; ts-rest / oRPC.
+**Why:** no client exists yet, so a package would be complexity for nobody.
+Keeping the schemas dependency-free means extracting them later is a file
+move, and an OpenAPI document can be layered on afterwards.
+
+### No `build` / `start` scripts yet
+**Chosen:** `pnpm dev` (`tsx watch`) only.
+**Rejected:** a `tsc` build with a `start` script.
+**Why:** deployment is out of scope; adding a build pipeline before there is a
+deploy target invites drift.
