@@ -1,0 +1,19 @@
+{
+  "name": "foci-code-challenge",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.5.3",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:setup": "pnpm --filter @foci/api db:setup",
+    "db:migrate": "pnpm --filter @foci/api db:migrate"
+  },
+  "devDependencies": {
+    "@types/node": "^26.3.0",
+    "typescript": "^7.0.2"
+  }
+}

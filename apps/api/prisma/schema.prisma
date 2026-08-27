@@ -1,0 +1,12 @@
+// Prisma schema for the todo application.
+// The datasource URL is supplied by prisma.config.ts (from DATABASE_URL).
+// Models are added in later phases — see plans/todo-persistence.md.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
