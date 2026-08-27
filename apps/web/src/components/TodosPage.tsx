@@ -1,17 +1,33 @@
-import { useQuery } from "@tanstack/react-query";
-import { todosQuery } from "@/api/todos";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { createTodo, todosQuery, todosQueryKey } from "@/api/todos";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TodoCard } from "./TodoCard.js";
+import { TodoForm } from "./TodoForm.js";
 
 export function TodosPage() {
+  const queryClient = useQueryClient();
   const todos = useQuery(todosQuery);
+  const [creating, setCreating] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const create = useMutation({
+    mutationFn: createTodo,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: todosQueryKey }),
+  });
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
       <header className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Todos</h1>
-        <Button>New</Button>
+        <Button onClick={() => setCreating(true)}>New</Button>
       </header>
 
       {todos.isPending && (
@@ -34,7 +50,7 @@ export function TodosPage() {
       {todos.isSuccess && todos.data.length === 0 && (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="text-sm text-muted-foreground">No todos yet.</p>
-          <Button variant="outline" size="sm" className="mt-4">
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => setCreating(true)}>
             Create your first todo
           </Button>
         </div>
@@ -47,6 +63,22 @@ export function TodosPage() {
           ))}
         </ul>
       )}
+
+      <Dialog open={creating} onOpenChange={setCreating}>
+        <DialogContent initialFocus={titleRef}>
+          <DialogHeader>
+            <DialogTitle>New todo</DialogTitle>
+            <DialogDescription>Only a title is required.</DialogDescription>
+          </DialogHeader>
+          <TodoForm
+            titleRef={titleRef}
+            onSubmit={async (input) => {
+              await create.mutateAsync(input);
+              setCreating(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

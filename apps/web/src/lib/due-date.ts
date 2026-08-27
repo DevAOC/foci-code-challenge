@@ -22,3 +22,8 @@ export function isOverdue(iso: string | null, isCompleted: boolean, now: Date = 
   if (iso === null || isCompleted) return false;
   return new Date(iso).getTime() < now.getTime();
 }
+
+/** A `datetime-local` input value ("2026-09-03T11:00", viewer's zone) as an ISO instant. */
+export function localInputToIso(value: string): string {
+  return new Date(value).toISOString();
+}

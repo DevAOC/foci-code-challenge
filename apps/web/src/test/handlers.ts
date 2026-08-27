@@ -39,3 +39,37 @@ export const handlers = {
       }),
     ),
 };
+
+export interface RecordedRequest {
+  method: string;
+  path: string;
+  body: unknown;
+}
+
+/**
+ * A stateful fake of the todos API: the list reflects what was created through
+ * it, and every write is recorded so tests can assert on exact bodies.
+ */
+export function fakeApi(initial: TodoResponse[] = []) {
+  const todos: TodoResponse[] = [...initial];
+  const requests: RecordedRequest[] = [];
+  const handlers = [
+    http.get("/api/todos", () => HttpResponse.json({ todos })),
+    http.post("/api/todos", async ({ request }) => {
+      const body = (await request.json()) as {
+        title: string;
+        description?: string | null;
+        dueDate?: string | null;
+      };
+      requests.push({ method: "POST", path: "/todos", body });
+      const todo = todoFixture({
+        title: body.title,
+        description: body.description ?? null,
+        dueDate: body.dueDate ?? null,
+      });
+      todos.push(todo);
+      return HttpResponse.json(todo, { status: 201 });
+    }),
+  ];
+  return { todos, requests, handlers };
+}

@@ -105,16 +105,16 @@ Wire the **New** button and the empty-state CTA to a modal containing `TodoForm`
 
 ### Acceptance criteria
 
-- [ ] App test: click New → a dialog with labelled Title, Description, and Due inputs and focus inside it; Escape closes it and returns focus to New
-- [ ] App test: fill title and submit → `POST /todos` body is exactly the parsed schema output (trimmed title, `"" → null` description, no `dueDate` key when blank); the dialog closes and the new card appears
-- [ ] App test: enter a local date-time → the request's `dueDate` is the corresponding ISO instant with `Z` offset
-- [ ] App test: whitespace-only title → no request; "Title must not be empty" shown under the field and linked via `aria-describedby`
-- [ ] App test: 201-char title / 2001-char description → no request; the length message shown under the field
-- [ ] App test: fake API returns 400 with `issues: [{ path: "title", … }]` → message under Title, dialog stays open
-- [ ] App test: fake API returns 500 → generic message at the top of the form, dialog stays open, entered values preserved
-- [ ] App test: Save is disabled and shows a pending state while the request is in flight; pressing Enter in the title field submits
-- [ ] App test: the empty-state CTA opens the same dialog
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green
+- [x] App test: click New → a dialog with labelled Title, Description, and Due inputs and focus inside it; Escape closes it and returns focus to New
+- [x] App test: fill title and submit → `POST /todos` body is exactly the parsed schema output (trimmed title, `"" → null` description, no `dueDate` key when blank); the dialog closes and the new card appears
+- [x] App test: enter a local date-time → the request's `dueDate` is the corresponding ISO instant with `Z` offset
+- [x] App test: whitespace-only title → no request; "Title must not be empty" shown under the field and linked via `aria-describedby`
+- [x] App test: 201-char title / 2001-char description → no request; the length message shown under the field
+- [x] App test: fake API returns 400 with `issues: [{ path: "title", … }]` → message under Title, dialog stays open
+- [x] App test: fake API returns 500 → generic message at the top of the form, dialog stays open, entered values preserved
+- [x] App test: Save is disabled and shows a pending state while the request is in flight; pressing Enter in the title field submits
+- [x] App test: the empty-state CTA opens the same dialog
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green
 
 ---
 

@@ -1,4 +1,4 @@
-import type { TodoResponse } from "@foci/contracts";
+import type { CreateTodoInput, TodoResponse } from "@foci/contracts";
 import { queryOptions } from "@tanstack/react-query";
 import { request } from "./client.js";
 
@@ -10,3 +10,7 @@ export async function listTodos(): Promise<TodoResponse[]> {
 }
 
 export const todosQuery = queryOptions({ queryKey: todosQueryKey, queryFn: listTodos });
+
+export function createTodo(input: CreateTodoInput): Promise<TodoResponse> {
+  return request<TodoResponse>("POST", "/todos", input);
+}
