@@ -128,6 +128,67 @@ the schema change.
   database.
 - Tests use a real Postgres connection; nothing is mocked.
 
+## Looking at the database
+
+### From the terminal
+
+```sh
+psql -d foci_dev -c '\dt'                       # list tables
+psql -d foci_dev -c '\d todos'                  # columns, types, defaults, indexes
+psql -d foci_dev -c 'SELECT * FROM todos'       # rows
+psql -d foci_dev -c 'SELECT * FROM _prisma_migrations'   # applied migrations
+```
+
+Or open an interactive session with `psql foci_dev` and use `\dt`, `\d todos`,
+`\l` (all databases), `\c foci_test` (switch database), `\q` (quit).
+
+### Prisma Studio (row browser, no install)
+
+```sh
+pnpm --filter @foci/api exec prisma studio     # opens http://localhost:5555
+```
+
+A spreadsheet-style view of each model where you can add, edit, and delete
+rows. Good for inspecting data; it doesn't show structure.
+
+### Desktop / editor GUIs
+
+Any Postgres client works. Connection details for all of them:
+
+| Field | Value |
+|---|---|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `foci_dev` (or `foci_test`) |
+| User | your macOS username (`whoami`) |
+| Password | none |
+
+- **TablePlus** — `brew install --cask tableplus`; lightweight and macOS-native.
+- **Postico** — Postgres-only, similar feel.
+- **DBeaver** / **pgAdmin** — heavier, free; DBeaver can draw ER diagrams.
+- **VS Code** — the *PostgreSQL* extension (`ms-ossdata.vscode-pgsql`) adds a
+  schema explorer and query panel to the sidebar.
+
+### Entity diagram
+
+The schema is currently one table:
+
+```mermaid
+erDiagram
+    todos {
+        uuid id PK
+        varchar(200) title
+        varchar(2000) description "nullable"
+        date due_date "nullable"
+        boolean is_completed "default false"
+        timestamptz created_at "default now()"
+        timestamptz updated_at
+    }
+```
+
+When a second table appears, consider `prisma-erd-generator` to regenerate
+this automatically on every `prisma generate`.
+
 ## Troubleshooting
 
 **`pg_isready` says "no response"** — the server isn't running. Start it with
