@@ -1,6 +1,7 @@
 import type { TodoResponse, UpdateTodoInput } from "@foci/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { createTodo, deleteTodo, todosQuery, todosQueryKey, updateTodo } from "@/api/todos";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,24 @@ export function TodosPage() {
     onSuccess: invalidate,
   });
   const remove = useMutation({ mutationFn: deleteTodo, onSuccess: invalidate });
+  // The card checkbox: optimistic so the card restyles at once, rolled back with a toast on failure.
+  const toggle = useMutation({
+    mutationFn: ({ id, isCompleted }: { id: string; isCompleted: boolean }) =>
+      updateTodo(id, { isCompleted }),
+    onMutate: async ({ id, isCompleted }) => {
+      await queryClient.cancelQueries({ queryKey: todosQueryKey });
+      const previous = queryClient.getQueryData<TodoResponse[]>(todosQueryKey);
+      queryClient.setQueryData<TodoResponse[]>(todosQueryKey, (list) =>
+        list?.map((todo) => (todo.id === id ? { ...todo, isCompleted } : todo)),
+      );
+      return { previous };
+    },
+    onError: (_error, { isCompleted }, context) => {
+      queryClient.setQueryData(todosQueryKey, context?.previous);
+      toast.error(`Couldn't mark the todo as ${isCompleted ? "done" : "not done"}.`);
+    },
+    onSettled: invalidate,
+  });
 
   const close = () => setDialog({ kind: "closed" });
 
@@ -71,9 +90,14 @@ export function TodosPage() {
       )}
 
       {todos.isSuccess && todos.data.length > 0 && (
-        <ul className="space-y-3">
+        <ul aria-label="Todos" className="space-y-3">
           {todos.data.map((todo) => (
-            <TodoCard key={todo.id} todo={todo} onOpen={(t) => setDialog({ kind: "edit", todo: t })} />
+            <TodoCard
+              key={todo.id}
+              todo={todo}
+              onOpen={(t) => setDialog({ kind: "edit", todo: t })}
+              onToggle={(t, isCompleted) => toggle.mutate({ id: t.id, isCompleted })}
+            />
           ))}
         </ul>
       )}

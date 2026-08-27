@@ -151,13 +151,13 @@ Add the sibling checkbox to each card. Ticking sends `PATCH /todos/:id { isCompl
 
 ### Acceptance criteria
 
-- [ ] App test: tick a card's checkbox → `PATCH` body `{ isCompleted: true }`; the card shows done styling before the response resolves; untick → `{ isCompleted: false }`
-- [ ] App test: fake API returns 500 → the checkbox and styling roll back and a toast with `role="status"`/`alert` appears with a "couldn't update" message
-- [ ] App test: the completed card keeps its position in the list
-- [ ] App test: clicking the checkbox does not open the dialog; clicking the card body does not change the checkbox
-- [ ] App test: keyboard — Tab reaches the checkbox before the open-button; Space toggles it
-- [ ] The checkbox has an accessible name that includes the todo's title
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green
+- [x] App test: tick a card's checkbox → `PATCH` body `{ isCompleted: true }`; the card shows done styling before the response resolves; untick → `{ isCompleted: false }`
+- [x] App test: fake API returns 500 → the checkbox and styling roll back and a toast with `role="status"`/`alert` appears with a "couldn't update" message
+- [x] App test: the completed card keeps its position in the list
+- [x] App test: clicking the checkbox does not open the dialog; clicking the card body does not change the checkbox
+- [x] App test: keyboard — Tab reaches the checkbox before the open-button; Space toggles it
+- [x] The checkbox has an accessible name that includes the todo's title
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green
 
 ---
 

@@ -41,6 +41,7 @@ describe("editing a todo", () => {
     await screen.findByRole("button", { name: /File taxes/ });
 
     await user.tab(); // New
+    await user.tab(); // the card's checkbox
     await user.tab(); // the card
     expect(screen.getByRole("button", { name: /File taxes/ })).toHaveFocus();
     await user.keyboard("{Enter}");
