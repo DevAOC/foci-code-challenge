@@ -81,17 +81,17 @@ The first web tracer bullet: a running `@foci/web` that renders the real todos f
 
 ### Acceptance criteria
 
-- [ ] `pnpm dev` at the root starts the API and the web app; the browser at the Vite URL shows todos created via the API; `/api/todos` proxies to `/todos`
-- [ ] `pnpm typecheck`, `pnpm test`, and `pnpm --filter @foci/web build` green; `pnpm --filter @foci/web test:coverage` runs
-- [ ] App test: three todos from the fake API render as three cards in the order received, each showing title, formatted due date, and description
-- [ ] App test: a todo with `description: null` and `dueDate: null` renders neither line
-- [ ] App test: a completed todo is rendered with done styling (assert via an accessible state or class contract, not a snapshot)
-- [ ] App test: skeleton cards are shown while the list request is pending
-- [ ] App test: an empty list shows the empty state with a "create your first todo" action
-- [ ] App test: a failed list request shows an inline error with Retry; clicking Retry refetches and shows the cards
-- [ ] Client test: 2xx JSON is returned typed; 204 resolves to `undefined`; a 4xx/5xx envelope becomes `ApiError` with `statusCode`, `code`, `message`, `issues`; a network failure rejects with a non-`ApiError` error
-- [ ] Formatter test: renders in the browser's zone; omits the year when current; appends it otherwise; overdue is true only when past and incomplete; a fixed `TZ` in the test config makes results deterministic
-- [ ] No `VITE_*` variables; no CORS added to the API
+- [x] `pnpm dev` at the root starts the API and the web app; the browser at the Vite URL shows todos created via the API; `/api/todos` proxies to `/todos`
+- [x] `pnpm typecheck`, `pnpm test`, and `pnpm --filter @foci/web build` green; `pnpm --filter @foci/web test:coverage` runs
+- [x] App test: three todos from the fake API render as three cards in the order received, each showing title, formatted due date, and description
+- [x] App test: a todo with `description: null` and `dueDate: null` renders neither line
+- [x] App test: a completed todo is rendered with done styling (assert via an accessible state or class contract, not a snapshot)
+- [x] App test: skeleton cards are shown while the list request is pending
+- [x] App test: an empty list shows the empty state with a "create your first todo" action
+- [x] App test: a failed list request shows an inline error with Retry; clicking Retry refetches and shows the cards
+- [x] Client test: 2xx JSON is returned typed; 204 resolves to `undefined`; a 4xx/5xx envelope becomes `ApiError` with `statusCode`, `code`, `message`, `issues`; a network failure rejects with a non-`ApiError` error
+- [x] Formatter test: renders in the browser's zone; omits the year when current; appends it otherwise; overdue is true only when past and incomplete; a fixed `TZ` in the test config makes results deterministic
+- [x] No `VITE_*` variables; no CORS added to the API
 
 ---
 

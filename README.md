@@ -1,12 +1,12 @@
 # foci-code-challenge
 
 A small todo-list application built as a code challenge. The stack is
-TypeScript end to end: a Node.js API backed by PostgreSQL through Prisma, and
-(later) a React front end, organised as a pnpm monorepo.
+TypeScript end to end: a Node.js API backed by PostgreSQL through Prisma, a
+React front end, and a shared contracts package, organised as a pnpm monorepo.
 
 The project is being built deliberately in thin, reviewable slices: the
-database layer first, then the **HTTP API** (in progress — see
-[Endpoints](#endpoints)), then the UI.
+database layer first, then the HTTP API (see [Endpoints](#endpoints)), then
+the **web app** (in progress — see `plans/todo-web.md`).
 
 ## Stack
 
@@ -16,13 +16,18 @@ database layer first, then the **HTTP API** (in progress — see
 | Package manager | pnpm workspaces |
 | Database | PostgreSQL 18 (local, via Homebrew) |
 | ORM / migrations | Prisma 7 with the `pg` driver adapter |
-| Tests | Vitest, run against a real test database |
+| API | Fastify 5, zod validation, shared with the UI via `@foci/contracts` |
+| Web | React 19 + Vite, TanStack Query, Tailwind v4 + shadcn/ui |
+| Tests | Vitest — API against a real test database; web under jsdom with MSW at the network boundary |
 
 ## Layout
 
 ```
 apps/
   api/          The Fastify HTTP API plus Prisma: schema, migrations, and tests.
+  web/          The React single-page app (Vite), talking to the API via /api.
+packages/
+  contracts/    Zod schemas and wire types shared by the API and the web app.
 docs/           Design decisions and their rejected alternatives.
 plans/          Phased implementation plans (tracer-bullet slices).
 ```
@@ -36,7 +41,7 @@ cp apps/api/.env.example apps/api/.env   # then replace <macos-user> with `whoam
 pnpm db:migrate                     # apply migrations to foci_dev
 pnpm typecheck
 pnpm test
-pnpm dev                            # API on http://127.0.0.1:3000
+pnpm dev                            # API on http://127.0.0.1:3000, web on http://localhost:5173
 ```
 
 Full setup instructions, including installing Postgres and troubleshooting, are
