@@ -215,3 +215,96 @@ seven fields); ts-rest / oRPC (an RPC layer over five routes).
 **Rejected:** a `tsc` build with a `start` script.
 **Why:** deployment is out of scope; adding a build pipeline before there is a
 deploy target invites drift.
+
+## Web app
+
+Decided in the web-app design review of 2026-08-27 (issue #6,
+[`plans/todo-web.md`](../plans/todo-web.md)).
+
+### One page, no router
+**Chosen:** a single list page; the create/edit dialog is React state.
+**Rejected:** a `/todos/:id` detail page; a `/todos/:id` route that opens the
+dialog (deep-linkable modal).
+**Why:** the record has four fields, so a detail page is ceremony, and a
+modal-in-the-URL is a nicety nobody misses on a personal list. Adding a router
+when a second real page appears is cheap.
+
+### Cards on the list, one form in a modal
+**Chosen:** stacked cards showing every field; **New** opens a modal form;
+clicking a card opens the same form prefilled. Delete lives in the edit
+modal's footer behind an inline two-step confirmation (no nested dialog).
+**Rejected:** inline quick-add by title; a separate `/todos/new` page; a
+hover-revealed trash icon on the card.
+**Why:** one form component serves both flows; delete is rare, so two clicks
+is fine and hover affordances are invisible on touch.
+
+### Sibling card controls, never nested
+**Chosen:** each card is a container with two sibling interactive children —
+a checkbox that toggles completion and a full-width `<button>` that opens the
+editor.
+**Rejected:** the whole card as a `<button>` containing the checkbox.
+**Why:** interactive content inside a `<button>` is invalid HTML and browsers
+and screen readers handle it inconsistently; siblings give a clean tab order
+(checkbox, then open) with no event-propagation tricks.
+
+### Validate on both sides with the shared schemas
+**Chosen:** the form runs `@foci/contracts`' `safeParse` before submitting and
+sends the *parsed* output; blank optional fields are omitted on create (the
+create schema does not accept `null`) and sent as `null` on update; server
+`400 issues[]` still map onto fields as a fallback.
+**Rejected:** trusting the API alone; duplicating the rules in the web app.
+**Why:** identical rules *and* transforms on both sides, with the API as the
+backstop for any client that bypasses the form.
+
+### Due date and time in the viewer's zone
+**Chosen:** a native `datetime-local` input; the value is converted to a UTC
+instant before it leaves the browser and back to local wall-clock on edit.
+Display via `Intl.DateTimeFormat` ("Sep 3, 11:00 AM", year only when not the
+current one). Overdue = past now and not completed. No date library.
+**Rejected:** a custom calendar/date-picker component; `date-fns`/`dayjs`.
+**Why:** the native input's value format is the only conversion point, so
+there is exactly one place a timezone bug could live — and it has tests.
+
+### TanStack Query with a thin typed fetch client
+**Chosen:** one list query, mutations that invalidate it, an optimistic update
+only for the card checkbox (rolled back with a toast on failure). One
+`request()` wrapper owns `fetch`, relative `/api` URLs, and turning the error
+envelope into `ApiError`.
+**Rejected:** hand-rolled `useEffect` + `useState`; a client store (Redux,
+Zustand).
+**Why:** loading/error/refetch-after-mutation are where hand-rolled data code
+goes wrong; there is no client-only state worth a store.
+
+### Vite dev proxy instead of CORS
+**Chosen:** the browser calls relative `/api/*`; Vite forwards to
+`127.0.0.1:3000` with the prefix stripped.
+**Rejected:** `@fastify/cors` plus a `VITE_API_URL`.
+**Why:** cross-origin only exists in development; a proxy removes the problem
+without touching the API or adding an environment variable.
+
+### Tailwind v4 + shadcn/ui, Stripe-like tokens
+**Chosen:** shadcn components copied into the repo (`dialog`, `button`,
+`input`, `textarea`, `checkbox`, `label`, `skeleton`, `sonner`) on Tailwind v4;
+neutral palette with one indigo accent, Inter with a system fallback,
+hairline borders, `0.5rem` radius.
+**Rejected:** plain CSS modules; a runtime component library (MUI, Chakra).
+**Why:** the accessible modal and checkbox are exactly where a library saves
+time, and shadcn adds no runtime dependency beyond its primitives. The
+components arrived on Base UI (shadcn's current default) rather than Radix as
+the review had assumed; the accessibility guarantees are the same.
+
+### Tests render the app against a fake network
+**Chosen:** Vitest + jsdom + React Testing Library; MSW intercepts `fetch` and
+tests declare handlers per case, typed against `@foci/contracts`; tests render
+the whole `App` and query the DOM with accessible selectors. The fetch client
+and the date formatter are also unit-tested.
+**Rejected:** mocking `fetch` or TanStack Query directly; Playwright now.
+**Why:** the network boundary is the web equivalent of the API's "no mocking
+internals" rule; a real-browser suite can be added once there is a deploy
+target to point it at.
+
+### Dev only, nothing serves `dist/`
+**Chosen:** `pnpm --filter @foci/web build` must pass but nothing serves its
+output; matches the API's "no build/start yet" stance.
+**Rejected:** `@fastify/static` serving the built app.
+**Why:** no deployment target yet.

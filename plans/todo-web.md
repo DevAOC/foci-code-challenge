@@ -171,8 +171,8 @@ Make it look like the brief: apply the Stripe-like tokens (ground, type, borders
 
 ### Acceptance criteria
 
-- [ ] App test: an incomplete todo with a past due date renders its due date with the overdue treatment; a completed past-due todo does not
-- [ ] Every interactive element has a visible focus ring; the a11y checklist in the PRD is met and any gaps are fixed with tests where behaviour changed
-- [ ] `pnpm --filter @foci/web test:coverage` reports on all web source with no untested module
-- [ ] `README.md`, `DEVELOPMENT.md`, `CLAUDE.md`, and `docs/decisions.md` updated as listed
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green; PR B opened
+- [x] App test: an incomplete todo with a past due date renders its due date with the overdue treatment; a completed past-due todo does not
+- [x] Every interactive element has a visible focus ring; the a11y checklist in the PRD is met and any gaps are fixed with tests where behaviour changed
+- [x] `pnpm --filter @foci/web test:coverage` reports on all web source with no untested module
+- [x] `README.md`, `DEVELOPMENT.md`, `CLAUDE.md`, and `docs/decisions.md` updated as listed
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green; PR B opened

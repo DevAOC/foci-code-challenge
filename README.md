@@ -6,7 +6,7 @@ React front end, and a shared contracts package, organised as a pnpm monorepo.
 
 The project is being built deliberately in thin, reviewable slices: the
 database layer first, then the HTTP API (see [Endpoints](#endpoints)), then
-the **web app** (in progress — see `plans/todo-web.md`).
+the **web app** (`plans/todo-web.md`).
 
 ## Stack
 

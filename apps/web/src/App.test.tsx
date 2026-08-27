@@ -96,6 +96,22 @@ describe("the todo list", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("marks an incomplete past-due todo as overdue, but not a completed one", async () => {
+    server.use(
+      handlers.listTodos([
+        todoFixture({ title: "Late", dueDate: "2000-01-01T12:00:00.000Z", isCompleted: false }),
+        todoFixture({ title: "Done late", dueDate: "2000-01-01T12:00:00.000Z", isCompleted: true }),
+        todoFixture({ title: "Future", dueDate: "2999-01-01T12:00:00.000Z", isCompleted: false }),
+      ]),
+    );
+    renderApp();
+
+    const [late, doneLate, future] = await screen.findAllByRole("listitem");
+    expect(within(late!).getByRole("time")).toHaveAttribute("data-overdue", "true");
+    expect(within(doneLate!).getByRole("time")).not.toHaveAttribute("data-overdue");
+    expect(within(future!).getByRole("time")).not.toHaveAttribute("data-overdue");
+  });
+
   it("always shows the New button in the header", async () => {
     server.use(handlers.listTodos([]));
     renderApp();
