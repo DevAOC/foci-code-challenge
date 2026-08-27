@@ -51,14 +51,14 @@ Start `DEVELOPMENT.md` with prerequisites (Homebrew `postgresql@18`, Node 24, pn
 
 ### Acceptance criteria
 
-- [ ] `pnpm install` at the root installs the workspace
-- [ ] `pnpm typecheck` and `pnpm test` run from the root and pass
-- [ ] `foci_dev` and `foci_test` exist locally, and `DEVELOPMENT.md` contains the exact commands used to create them
-- [ ] `.env.example` is committed with a placeholder `DATABASE_URL`; `.env` is gitignored
-- [ ] A Vitest test connects to `foci_test` via the Prisma client and succeeds
-- [ ] `DEVELOPMENT.md` covers prerequisites, checking/starting Postgres, database creation, env setup, and the test / typecheck commands
-- [ ] `README.md` describes the project and stack and links to `DEVELOPMENT.md`
-- [ ] No HTTP server, routes, or web package exist
+- [x] `pnpm install` at the root installs the workspace
+- [x] `pnpm typecheck` and `pnpm test` run from the root and pass
+- [x] `foci_dev` and `foci_test` exist locally, and `DEVELOPMENT.md` contains the exact commands used to create them
+- [x] `.env.example` is committed with a placeholder `DATABASE_URL`; `.env` is gitignored
+- [x] A Vitest test connects to `foci_test` via the Prisma client and succeeds
+- [x] `DEVELOPMENT.md` covers prerequisites, checking/starting Postgres, database creation, env setup, and the test / typecheck commands
+- [x] `README.md` describes the project and stack and links to `DEVELOPMENT.md`
+- [x] No HTTP server, routes, or web package exist
 
 ---
 
@@ -74,14 +74,14 @@ Update `DEVELOPMENT.md` with the migration commands (apply migrations, create a 
 
 ### Acceptance criteria
 
-- [ ] Migration creates table `todos` with exactly the columns, types, nullability, and defaults in the architectural decisions (verified by inspecting the migrated database or the generated SQL)
-- [ ] Physical table and column names are snake_case; Prisma model fields are camelCase
-- [ ] Test: title-only insert yields correct defaults and generated `id`/`createdAt`/`updatedAt`
-- [ ] Test: full insert round-trips every column; `dueDate` is preserved as a calendar date
-- [ ] Test: updating a row advances `updatedAt`
-- [ ] Test: 201-character title and 2001-character description are rejected by the database
-- [ ] Test database is migrated before the suite and cleaned between tests so suites are order-independent
-- [ ] `DEVELOPMENT.md` documents applying migrations, creating a migration, and resetting the dev database
+- [x] Migration creates table `todos` with exactly the columns, types, nullability, and defaults in the architectural decisions (verified by inspecting the migrated database or the generated SQL)
+- [x] Physical table and column names are snake_case; Prisma model fields are camelCase
+- [x] Test: title-only insert yields correct defaults and generated `id`/`createdAt`/`updatedAt`
+- [x] Test: full insert round-trips every column; `dueDate` is preserved as a calendar date
+- [x] Test: updating a row advances `updatedAt`
+- [x] Test: 201-character title and 2001-character description are rejected by the database
+- [x] Test database is migrated before the suite and cleaned between tests so suites are order-independent
+- [x] `DEVELOPMENT.md` documents applying migrations, creating a migration, and resetting the dev database
 
 ---
 
@@ -95,11 +95,11 @@ Make the PR reviewable and the project onboardable. Re-verify `DEVELOPMENT.md` e
 
 ### Acceptance criteria
 
-- [ ] `DEVELOPMENT.md` walks a new developer from clone to passing tests with copy-pasteable commands, verified by actually following it after `dropdb foci_dev foci_test`
-- [ ] `DEVELOPMENT.md` has a troubleshooting section for the common local-Postgres failures
-- [ ] A decisions document lists each schema decision, the alternative rejected, and why
-- [ ] `README.md` explains the project, stack, quick start, schema overview, and links to `DEVELOPMENT.md` and the decisions document
-- [ ] `CLAUDE.md` lists the real install / typecheck / test / single-test / migrate commands and no longer claims there is no tooling
+- [x] `DEVELOPMENT.md` walks a new developer from clone to passing tests with copy-pasteable commands, verified by actually following it after `dropdb foci_dev foci_test`
+- [x] `DEVELOPMENT.md` has a troubleshooting section for the common local-Postgres failures
+- [x] A decisions document lists each schema decision, the alternative rejected, and why
+- [x] `README.md` explains the project, stack, quick start, schema overview, and links to `DEVELOPMENT.md` and the decisions document
+- [x] `CLAUDE.md` lists the real install / typecheck / test / single-test / migrate commands and no longer claims there is no tooling
 
 ---
 

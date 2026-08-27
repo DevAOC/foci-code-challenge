@@ -145,6 +145,14 @@ installed it; run `whoami` and use that.
 **Prisma prints an upgrade banner about a newer major version** — harmless; the
 project pins Prisma 7 deliberately.
 
+**Tests fail with schema or migration errors on `foci_test`** — the test
+database has drifted (e.g. a migration was edited after being applied). Reset
+it and let the test run re-apply migrations:
+
+```sh
+dropdb foci_test && createdb foci_test && pnpm test
+```
+
 **Starting over** — drop both databases and repeat step 3:
 
 ```sh

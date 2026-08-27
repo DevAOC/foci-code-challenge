@@ -39,7 +39,28 @@ pnpm test
 Full setup instructions, including installing Postgres and troubleshooting, are
 in [DEVELOPMENT.md](./DEVELOPMENT.md).
 
+## Data model
+
+One table, `todos`:
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `uuid` PK | generated client-side |
+| `title` | `varchar(200)` NOT NULL | |
+| `description` | `varchar(2000)` NULL | |
+| `due_date` | `date` NULL | calendar date, no time of day |
+| `is_completed` | `boolean` NOT NULL, default `false` | single source of truth for completion |
+| `created_at` | `timestamptz` NOT NULL, default `now()` | |
+| `updated_at` | `timestamptz` NOT NULL | maintained by Prisma `@updatedAt` |
+
+Physical names are snake_case; the Prisma model (`Todo`) uses camelCase. The
+schema is in `apps/api/prisma/schema.prisma` and every change ships as a
+migration under `apps/api/prisma/migrations/`.
+
 ## Where the reasoning lives
+
+- [`docs/decisions.md`](./docs/decisions.md) — each schema and tooling
+  decision, the alternative rejected, and why.
 
 - [`plans/`](./plans/) — the phased plan for each slice and the architectural
   decisions each phase depends on.
