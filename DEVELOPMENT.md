@@ -1,6 +1,8 @@
 # Development guide
 
-Everything you need to go from a fresh clone to green tests on macOS.
+Everything you need to go from a fresh clone to green tests on macOS. The
+project was built on a Mac and the steps below assume Homebrew; Windows users
+should read [Windows setup](#windows-setup) first, then come back to step 5.
 
 ## 1. Prerequisites
 
@@ -107,6 +109,101 @@ Vite on `localhost:5173`; the browser calls relative `/api/*` URLs and Vite's
 dev proxy forwards them to the API with the `/api` prefix stripped, so there is
 no CORS configuration and no `VITE_*` environment variable. The full endpoint
 list is in the [README](./README.md#endpoints).
+
+## Windows setup
+
+The project was developed and tested only on macOS. The steps below have not
+been verified on a Windows machine; if something fails that isn't covered
+here, please open an issue. Two of the repo's scripts are POSIX shell scripts,
+so on Windows you have two options:
+
+- **WSL 2 (recommended).** Install Ubuntu from the Microsoft Store, install
+  Node, pnpm, and PostgreSQL inside it (`sudo apt install postgresql-18`, or
+  the [PGDG apt repo](https://www.postgresql.org/download/linux/ubuntu/)), and
+  follow the macOS guide from step 3 with `sudo service postgresql start` in
+  place of `brew services`. Ubuntu's Postgres does not trust your OS user, so
+  either create a role for it (`sudo -u postgres createuser -s $(whoami)`) or
+  put a password in the URLs as described below. Use the WSL filesystem
+  (`~/`), not `/mnt/c/`, for a fast `pnpm install`.
+- **Native Windows (PowerShell).** Follow the rest of this section.
+
+### 1. Prerequisites
+
+| Tool       | Version | Install                                                        |
+| ---------- | ------- | -------------------------------------------------------------- |
+| Node.js    | 24+     | `winget install OpenJS.NodeJS` or [nodejs.org](https://nodejs.org) |
+| pnpm       | 11+     | `corepack enable` (run PowerShell as Administrator once)       |
+| PostgreSQL | 18      | `winget install PostgreSQL.PostgreSQL.18` or the [EDB installer](https://www.postgresql.org/download/windows/) |
+
+The installer asks for a password for the `postgres` superuser — remember it,
+you need it in step 3. It also registers a Windows service that starts
+automatically. Add `C:\Program Files\PostgreSQL\18\bin` to your `PATH` so
+`psql` and `createdb` work from PowerShell, then check:
+
+```powershell
+node --version   # v24.x
+pnpm --version   # 11.x
+psql --version   # psql (PostgreSQL) 18.x
+```
+
+### 2. Create the databases
+
+`pnpm db:setup` is a shell script and does not run in PowerShell. Create the
+databases directly (enter the `postgres` password when prompted):
+
+```powershell
+createdb -U postgres foci_dev
+createdb -U postgres foci_test
+```
+
+To avoid the password prompt on every `psql`/`createdb` call, set
+`$env:PGPASSWORD = "<password>"` for the session or create a
+`%APPDATA%\postgresql\pgpass.conf` file containing
+`localhost:5432:*:postgres:<password>`.
+
+### 3. Configure the environment
+
+Copy the example and put the `postgres` user and password in both URLs
+(Windows Postgres requires password auth; there is no OS-user trust):
+
+```powershell
+Copy-Item apps\api\.env.example apps\api\.env
+```
+
+Then edit `apps\api\.env` so it reads:
+
+```
+DATABASE_URL="postgresql://postgres:<password>@localhost:5432/foci_dev"
+TEST_DATABASE_URL="postgresql://postgres:<password>@localhost:5432/foci_test"
+PORT=3000
+```
+
+If the password contains characters like `@`, `:`, or `#`, percent-encode
+them (`@` → `%40`).
+
+### 4. Install and verify
+
+Same as the macOS guide from step 5:
+
+```powershell
+pnpm install
+pnpm db:migrate
+pnpm typecheck
+pnpm test
+pnpm dev
+```
+
+### Windows caveats
+
+- `pnpm db:setup` and `pnpm --filter @foci/api db:migrate:test` are POSIX
+  shell commands; use the manual `createdb` commands above. The test suite
+  migrates `foci_test` itself, so the second script is rarely needed.
+- `curl` in PowerShell is an alias for `Invoke-WebRequest`; use `curl.exe`
+  or `Invoke-RestMethod` for the examples in step 6.
+- Git may convert line endings; if a shell script complains about `\r`, run
+  `git config core.autocrlf false` and re-clone, or use WSL.
+- If port 5432 is already in use by another Postgres install, change the port
+  in both `.env` URLs.
 
 ## Everyday commands
 
