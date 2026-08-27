@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import { registerErrorHandling } from "./http/errors.js";
+import { todoRoutes } from "./todos/routes.js";
 import type { PrismaClient } from "./generated/prisma/client.js";
 
 export interface AppOptions {
@@ -16,6 +17,7 @@ export function buildApp({ prisma, logger = false }: AppOptions): FastifyInstanc
   const app = Fastify({ logger });
   app.decorate("prisma", prisma);
   registerErrorHandling(app);
+  void app.register(todoRoutes);
   return app;
 }
 
