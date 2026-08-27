@@ -128,16 +128,16 @@ Clicking a card's open-button opens the same modal in edit mode, prefilled from 
 
 ### Acceptance criteria
 
-- [ ] App test: click a card → dialog prefilled with its title, description, local due date-time, and completed state; Save disabled
-- [ ] App test: change only the title → `PATCH` body is `{ title }` and nothing else; card shows the new title after close
-- [ ] App test: clear description and due → `PATCH` body is `{ description: null, dueDate: null }`
-- [ ] App test: tick Completed in the form → `PATCH` body is `{ isCompleted: true }`
-- [ ] App test: revert a change to its original value → Save disabled again
-- [ ] App test: fake API returns 404 on `PATCH` → not-found message shown; list refetched and the stale card gone
-- [ ] App test: 400 `issues` and 500 on save behave as in phase 3
-- [ ] App test: click Delete → inline confirmation replaces the footer, no request yet; Cancel restores the footer; confirm → `DELETE /todos/:id`, dialog closes, card gone
-- [ ] App test: keyboard — Tab to a card's open-button and press Enter opens the dialog
-- [ ] `pnpm typecheck`, `pnpm test`, web `build` green
+- [x] App test: click a card → dialog prefilled with its title, description, local due date-time, and completed state; Save disabled
+- [x] App test: change only the title → `PATCH` body is `{ title }` and nothing else; card shows the new title after close
+- [x] App test: clear description and due → `PATCH` body is `{ description: null, dueDate: null }`
+- [x] App test: tick Completed in the form → `PATCH` body is `{ isCompleted: true }`
+- [x] App test: revert a change to its original value → Save disabled again
+- [x] App test: fake API returns 404 on `PATCH` → not-found message shown; list refetched and the stale card gone
+- [x] App test: 400 `issues` and 500 on save behave as in phase 3
+- [x] App test: click Delete → inline confirmation replaces the footer, no request yet; Cancel restores the footer; confirm → `DELETE /todos/:id`, dialog closes, card gone
+- [x] App test: keyboard — Tab to a card's open-button and press Enter opens the dialog
+- [x] `pnpm typecheck`, `pnpm test`, web `build` green
 
 ---
 

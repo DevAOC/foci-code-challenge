@@ -27,3 +27,10 @@ export function isOverdue(iso: string | null, isCompleted: boolean, now: Date = 
 export function localInputToIso(value: string): string {
   return new Date(value).toISOString();
 }
+
+/** An ISO instant as a `datetime-local` input value in the viewer's zone ("2026-09-03T11:00"). */
+export function isoToLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}

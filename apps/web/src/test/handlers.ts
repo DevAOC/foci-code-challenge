@@ -70,6 +70,28 @@ export function fakeApi(initial: TodoResponse[] = []) {
       todos.push(todo);
       return HttpResponse.json(todo, { status: 201 });
     }),
+    http.patch("/api/todos/:id", async ({ request, params }) => {
+      const body = (await request.json()) as Partial<
+        Pick<TodoResponse, "title" | "description" | "dueDate" | "isCompleted">
+      >;
+      requests.push({ method: "PATCH", path: `/todos/${String(params.id)}`, body });
+      const index = todos.findIndex((t) => t.id === params.id);
+      if (index === -1) return notFound(String(params.id));
+      const updated = { ...todos[index]!, ...body, updatedAt: "2026-08-27T13:00:00.000Z" };
+      todos[index] = updated;
+      return HttpResponse.json(updated);
+    }),
+    http.delete("/api/todos/:id", ({ params }) => {
+      requests.push({ method: "DELETE", path: `/todos/${String(params.id)}`, body: undefined });
+      const index = todos.findIndex((t) => t.id === params.id);
+      if (index === -1) return notFound(String(params.id));
+      todos.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    }),
   ];
   return { todos, requests, handlers };
+}
+
+function notFound(id: string) {
+  return HttpResponse.json(errorBody(404, "NOT_FOUND", `Todo ${id} not found`), { status: 404 });
 }

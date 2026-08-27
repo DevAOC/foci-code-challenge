@@ -1,6 +1,7 @@
+import type { TodoResponse, UpdateTodoInput } from "@foci/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { createTodo, todosQuery, todosQueryKey } from "@/api/todos";
+import { createTodo, deleteTodo, todosQuery, todosQueryKey, updateTodo } from "@/api/todos";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,21 +14,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TodoCard } from "./TodoCard.js";
 import { TodoForm } from "./TodoForm.js";
 
+type DialogState = { kind: "closed" } | { kind: "create" } | { kind: "edit"; todo: TodoResponse };
+
 export function TodosPage() {
   const queryClient = useQueryClient();
   const todos = useQuery(todosQuery);
-  const [creating, setCreating] = useState(false);
+  const [dialog, setDialog] = useState<DialogState>({ kind: "closed" });
   const titleRef = useRef<HTMLInputElement>(null);
-  const create = useMutation({
-    mutationFn: createTodo,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: todosQueryKey }),
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: todosQueryKey });
+  const create = useMutation({ mutationFn: createTodo, onSuccess: invalidate });
+  const update = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateTodoInput }) => updateTodo(id, input),
+    onSuccess: invalidate,
   });
+  const remove = useMutation({ mutationFn: deleteTodo, onSuccess: invalidate });
+
+  const close = () => setDialog({ kind: "closed" });
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
       <header className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Todos</h1>
-        <Button onClick={() => setCreating(true)}>New</Button>
+        <Button onClick={() => setDialog({ kind: "create" })}>New</Button>
       </header>
 
       {todos.isPending && (
@@ -50,7 +59,12 @@ export function TodosPage() {
       {todos.isSuccess && todos.data.length === 0 && (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="text-sm text-muted-foreground">No todos yet.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => setCreating(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={() => setDialog({ kind: "create" })}
+          >
             Create your first todo
           </Button>
         </div>
@@ -59,24 +73,46 @@ export function TodosPage() {
       {todos.isSuccess && todos.data.length > 0 && (
         <ul className="space-y-3">
           {todos.data.map((todo) => (
-            <TodoCard key={todo.id} todo={todo} />
+            <TodoCard key={todo.id} todo={todo} onOpen={(t) => setDialog({ kind: "edit", todo: t })} />
           ))}
         </ul>
       )}
 
-      <Dialog open={creating} onOpenChange={setCreating}>
+      <Dialog open={dialog.kind !== "closed"} onOpenChange={(open) => !open && close()}>
         <DialogContent initialFocus={titleRef}>
           <DialogHeader>
-            <DialogTitle>New todo</DialogTitle>
-            <DialogDescription>Only a title is required.</DialogDescription>
+            <DialogTitle>{dialog.kind === "edit" ? "Edit todo" : "New todo"}</DialogTitle>
+            <DialogDescription>
+              {dialog.kind === "edit" ? "Changes are saved when you press Save." : "Only a title is required."}
+            </DialogDescription>
           </DialogHeader>
-          <TodoForm
-            titleRef={titleRef}
-            onSubmit={async (input) => {
-              await create.mutateAsync(input);
-              setCreating(false);
-            }}
-          />
+          {dialog.kind === "create" && (
+            <TodoForm
+              mode="create"
+              titleRef={titleRef}
+              onSubmit={async (input) => {
+                await create.mutateAsync(input);
+                close();
+              }}
+            />
+          )}
+          {dialog.kind === "edit" && (
+            <TodoForm
+              key={dialog.todo.id}
+              mode="edit"
+              todo={dialog.todo}
+              titleRef={titleRef}
+              onSubmit={async (input) => {
+                await update.mutateAsync({ id: dialog.todo.id, input });
+                close();
+              }}
+              onDelete={async () => {
+                await remove.mutateAsync(dialog.todo.id);
+                close();
+              }}
+              onNotFound={() => void invalidate()}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </main>
