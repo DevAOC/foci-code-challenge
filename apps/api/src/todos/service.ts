@@ -23,3 +23,15 @@ export async function getTodoById(prisma: PrismaClient, id: string): Promise<Tod
   }
   return todo;
 }
+
+/** All todos, oldest first; `id` breaks ties so the order is deterministic. */
+export async function listTodos(prisma: PrismaClient): Promise<Todo[]> {
+  return prisma.todo.findMany({ orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
+}
+
+export async function deleteTodo(prisma: PrismaClient, id: string): Promise<void> {
+  const { count } = await prisma.todo.deleteMany({ where: { id } });
+  if (count === 0) {
+    throw new NotFoundError(`Todo ${id} not found`);
+  }
+}

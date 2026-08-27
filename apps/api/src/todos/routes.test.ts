@@ -193,4 +193,91 @@ describe("/todos", () => {
       expect((await api.get(`/todos/${b.body.id}`)).body.title).toBe("B");
     });
   });
+
+  describe("GET /todos", () => {
+    it("returns an empty envelope when there are no todos", async () => {
+      const res = await api.get("/todos");
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ todos: [] });
+    });
+
+    it("returns todos in creation order with the full representation", async () => {
+      const first = await api.post("/todos", { title: "First", dueDate: "2026-01-01" });
+      const second = await api.post("/todos", { title: "Second", description: "d" });
+      const third = await api.post("/todos", { title: "Third" });
+
+      const res = await api.get("/todos");
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ todos: [first.body, second.body, third.body] });
+      for (const todo of res.body.todos) {
+        expect(Object.keys(todo).sort()).toEqual([...REPRESENTATION_KEYS].sort());
+      }
+    });
+
+    it("breaks createdAt ties by id", async () => {
+      const createdAt = new Date("2026-01-01T00:00:00.000Z");
+      const ids = [
+        "ffffffff-0000-4000-8000-000000000000",
+        "00000000-0000-4000-8000-000000000000",
+        "88888888-0000-4000-8000-000000000000",
+      ];
+      for (const id of ids) {
+        await prisma.todo.create({ data: { id, title: id, createdAt } });
+      }
+
+      const res = await api.get("/todos");
+      expect(res.body.todos.map((todo: { id: string }) => todo.id)).toEqual([...ids].sort());
+    });
+
+    it("reflects later creates and deletes", async () => {
+      const a = await api.post("/todos", { title: "A" });
+      expect((await api.get("/todos")).body.todos).toHaveLength(1);
+      const b = await api.post("/todos", { title: "B" });
+      expect((await api.get("/todos")).body.todos).toHaveLength(2);
+      await api.delete(`/todos/${a.body.id}`);
+      expect((await api.get("/todos")).body).toEqual({ todos: [b.body] });
+    });
+  });
+
+  describe("DELETE /todos/:id", () => {
+    it("removes the todo and returns 204 with no body", async () => {
+      const created = await api.post("/todos", { title: "Gone soon" });
+
+      const res = await api.delete(`/todos/${created.body.id}`);
+      expect(res.status).toBe(204);
+      expect(res.body).toBeUndefined();
+
+      expect((await api.get(`/todos/${created.body.id}`)).status).toBe(404);
+      expect(await prisma.todo.count()).toBe(0);
+    });
+
+    it("returns 404 on a second delete", async () => {
+      const created = await api.post("/todos", { title: "Once" });
+      await api.delete(`/todos/${created.body.id}`);
+      const res = await api.delete(`/todos/${created.body.id}`);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toMatchObject({ code: "NOT_FOUND" });
+    });
+
+    it("returns 404 NOT_FOUND for an unknown UUID", async () => {
+      const res = await api.delete(`/todos/${UNKNOWN_ID}`);
+      expect(res.status).toBe(404);
+      expect(res.body).toEqual({
+        error: { statusCode: 404, code: "NOT_FOUND", message: `Todo ${UNKNOWN_ID} not found` },
+      });
+    });
+
+    it.each(["123", "not-a-uuid"])("returns 400 on id for the malformed id %s", async (id) => {
+      const res = await api.delete(`/todos/${id}`);
+      expect(res.status).toBe(400);
+      expect(res.body.error.issues).toEqual([{ path: "id", message: expect.any(String) }]);
+    });
+
+    it("leaves other todos intact", async () => {
+      const keep = await api.post("/todos", { title: "Keep" });
+      const drop = await api.post("/todos", { title: "Drop" });
+      await api.delete(`/todos/${drop.body.id}`);
+      expect((await api.get("/todos")).body).toEqual({ todos: [keep.body] });
+    });
+  });
 });
