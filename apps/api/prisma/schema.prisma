@@ -1,6 +1,6 @@
 // Prisma schema for the todo application.
 // The datasource URL is supplied by prisma.config.ts (from DATABASE_URL).
-// Models are added in later phases — see plans/todo-persistence.md.
+// Schema decisions and rejected alternatives: plans/todo-persistence.md.
 
 generator client {
   provider = "prisma-client"
@@ -9,4 +9,30 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+/// A single item on the todo list. Physical names are snake_case (see @map);
+/// model fields are camelCase.
+model Todo {
+  /// Generated client-side by Prisma so ids are opaque and safe to expose in URLs.
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Length limit is mirrored by the API's validation schema; the DB is the backstop.
+  /// "Non-empty after trim" is an API rule, not a DB rule.
+  title String @db.VarChar(200)
+
+  /// Optional. The API normalizes "" to NULL so there is one representation of "no description".
+  description String? @db.VarChar(2000)
+
+  /// Calendar date only — no time of day, no timezone.
+  dueDate DateTime? @map("due_date") @db.Date
+
+  /// Single source of truth for completion; there is deliberately no completed_at.
+  isCompleted Boolean @default(false) @map("is_completed")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  /// Maintained by Prisma on every update; no database trigger.
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("todos")
 }

@@ -101,8 +101,23 @@ All commands run from the repository root.
 | `pnpm db:setup` | Create `foci_dev` / `foci_test` if they don't exist |
 | `pnpm db:migrate` | Apply pending migrations to `foci_dev` (`prisma migrate dev`) |
 
-Migration commands will be documented in more detail once the first migration
-exists (see `plans/todo-persistence.md`, Phase 2).
+## Migrations
+
+The schema lives in `apps/api/prisma/schema.prisma`; every change to it ships
+as a SQL migration under `apps/api/prisma/migrations/`. Never edit the database
+by hand.
+
+| Task | Command (from the repo root) |
+|---|---|
+| Apply pending migrations to `foci_dev` | `pnpm db:migrate` |
+| Create a new migration after editing the schema | `pnpm --filter @foci/api exec prisma migrate dev --name <short_description>` |
+| Apply migrations to `foci_test` manually | `pnpm --filter @foci/api db:migrate:test` (tests do this automatically) |
+| Drop and recreate `foci_dev` from scratch | `pnpm --filter @foci/api db:reset` |
+| Inspect the live table | `psql -d foci_dev -c '\d todos'` |
+
+`prisma migrate dev` both writes the migration file and applies it, then
+regenerates the Prisma client. Commit the generated `migration.sql` alongside
+the schema change.
 
 ## How tests reach the database
 
