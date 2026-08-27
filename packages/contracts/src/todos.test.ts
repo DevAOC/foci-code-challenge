@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { issuesFromZod } from "../http/errors.js";
-import { createTodoSchema, todoIdParamsSchema, updateTodoSchema } from "./schemas.js";
+import { createTodoSchema, todoIdParamsSchema, updateTodoSchema } from "./todos.js";
 import type { z } from "zod";
 
-/** Returns the dotted paths of the failing fields, or [] when parsing succeeds. */
+/** Dotted paths of the failing fields (the same shape the API puts in `issues[].path`), or [] on success. */
 function failingPaths(schema: z.ZodType, input: unknown): string[] {
   const result = schema.safeParse(input);
-  return result.success ? [] : issuesFromZod(result.error).map((issue) => issue.path);
+  return result.success ? [] : result.error.issues.map((issue) => issue.path.map(String).join("."));
 }
 
 describe("createTodoSchema", () => {
@@ -97,7 +96,7 @@ describe("createTodoSchema", () => {
     it("names the format in the message for a bare date", () => {
       const result = createTodoSchema.safeParse({ title: "t", dueDate: "2026-09-03" });
       expect(result.success).toBe(false);
-      expect(issuesFromZod(result.error!)[0]!.message).toMatch(/ISO 8601.*offset/);
+      expect(result.error!.issues[0]!.message).toMatch(/ISO 8601.*offset/);
     });
 
     it.each([null, 1757000000, true, new Date("2026-09-03T15:00:00Z")])(
@@ -154,7 +153,7 @@ describe("updateTodoSchema", () => {
     const result = updateTodoSchema.safeParse({});
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(issuesFromZod(result.error)).toEqual([
+      expect(result.error.issues.map((i) => ({ path: i.path.join("."), message: i.message }))).toEqual([
         { path: "", message: expect.stringContaining("At least one of") },
       ]);
     }

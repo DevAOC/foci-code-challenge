@@ -187,14 +187,28 @@ layer.
 be ceremony; but not-found translation and date formatting must exist exactly
 once, which rules out inlining Prisma in five handlers.
 
-### Validation schemas stay in the API package
-**Chosen:** zod schemas live in `apps/api/src/todos/schemas.ts`, free of
-Prisma and Fastify imports.
-**Rejected:** a shared `packages/contracts` workspace package now; OpenAPI +
-generated client; ts-rest / oRPC.
+### Validation schemas stay in the API package — superseded 2026-08-27
+**Originally chosen:** zod schemas live in `apps/api/src/todos/schemas.ts`,
+free of Prisma and Fastify imports.
+**Rejected at the time:** a shared `packages/contracts` workspace package now;
+OpenAPI + generated client; ts-rest / oRPC.
 **Why:** no client exists yet, so a package would be complexity for nobody.
 Keeping the schemas dependency-free means extracting them later is a file
 move, and an OpenAPI document can be layered on afterwards.
+
+**Superseded by:** the web-app design review of 2026-08-27 (issue #6). The
+client now exists and must validate before submitting with exactly the rules
+the API enforces.
+**Now chosen:** `packages/contracts` (`@foci/contracts`) holds the schemas,
+their inferred input types, the length constants, `TodoResponse`, and the
+`ErrorBody` envelope; both `@foci/api` and the web app depend on it via
+`workspace:*` and import its TypeScript source directly (no build step — every
+consumer runs TypeScript through tsx, Vite, or Vitest). The schemas
+*transform* as well as validate (trim, `"" → null`), so a client that runs
+`safeParse` and sends the parsed output submits byte-for-byte what the API
+would derive. The API stays the backstop for any client that bypasses the form.
+**Still rejected:** OpenAPI + generated client (a second source of truth for
+seven fields); ts-rest / oRPC (an RPC layer over five routes).
 
 ### No `build` / `start` scripts yet
 **Chosen:** `pnpm dev` (`tsx watch`) only.

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-A pnpm monorepo with one package, `apps/api`: the Prisma schema, migrations, and database tests, plus a Fastify JSON API under `/todos` being delivered per `plans/todo-api.md` (GitHub issue #3). There is no web package yet. Layering is fixed: `src/todos/routes.ts` (parse, validate with `src/todos/schemas.ts`, delegate, serialize with `src/todos/serialize.ts`) → `src/todos/service.ts` (the only module that touches Prisma; throws `NotFoundError`) → Prisma. `src/http/errors.ts` renders every failure as `{ error: { statusCode, code, message, issues? } }`. `src/app.ts` builds the app; `src/server.ts` is the `pnpm dev` entrypoint.
+A pnpm monorepo with two packages. `packages/contracts` (`@foci/contracts`) is the wire contract shared by the API and its clients: the zod validation schemas for `/todos`, the `TodoResponse` representation, and the `ErrorBody` envelope; it depends on zod only and is imported as source (no build). `apps/api` (`@foci/api`) is the Prisma schema, migrations, database tests, and a Fastify JSON API under `/todos` delivered per `plans/todo-api.md` (issue #3). A React web app, `apps/web`, is being delivered per `plans/todo-web.md` (issue #6) — it does not exist yet. Layering is fixed: `src/todos/routes.ts` (parse, validate with the schemas from `@foci/contracts`, delegate, serialize with `src/todos/serialize.ts`) → `src/todos/service.ts` (the only module that touches Prisma; throws `NotFoundError`) → Prisma. Validation schemas live in `@foci/contracts` and nowhere else. `src/http/errors.ts` renders every failure as `{ error: { statusCode, code, message, issues? } }`. `src/app.ts` builds the app; `src/server.ts` is the `pnpm dev` entrypoint. `dueDate` is a `timestamptz` carried as an ISO 8601 instant with offset, returned normalized to UTC.
 
 ## Commands
 
@@ -17,6 +17,7 @@ pnpm dev                      # Fastify API on http://127.0.0.1:$PORT (default 3
 pnpm typecheck                # prisma generate && tsc --noEmit, every package
 pnpm test                     # prisma generate && vitest run, every package
 pnpm --filter @foci/api test -- src/db/todos.test.ts   # single test file
+pnpm --filter @foci/contracts test                     # schema unit tests only (no database)
 pnpm --filter @foci/api test:coverage                  # coverage for app/http/todos modules
 pnpm db:migrate               # prisma migrate dev against foci_dev
 pnpm --filter @foci/api exec prisma migrate dev --name <name>   # new migration
@@ -34,7 +35,8 @@ There is no lint or format command yet.
 
 ## Repository layout
 
-- `apps/api/` — Prisma schema (`prisma/schema.prisma`), migrations, `src/db/` client + tests, `src/http/` error contract, `src/todos/` schemas/service/routes/serializer + HTTP tests, `src/test/` DB lifecycle and inject helpers.
+- `packages/contracts/` — `src/todos.ts` (zod schemas, input types, length constants, `TodoResponse`), `src/errors.ts` (`ErrorBody`, `ErrorCode`, `ErrorIssue`), schema unit tests. No database, no Fastify.
+- `apps/api/` — Prisma schema (`prisma/schema.prisma`), migrations, `src/db/` client + tests, `src/http/` error handling (re-exports the error types from contracts), `src/todos/` service/routes/serializer + HTTP tests, `src/test/` DB lifecycle and inject helpers.
 - `docs/`, `plans/` — see above.
 - `.claude/skills/` and `.agents/skills/` — installed agent skills (same set in both directories, mirrored for different agent tools).
 - `skills-lock.json` — lockfile for those skills, pinned by source repo, path, and content hash. Skills are installed from `mattpocock/skills` and `wshobson/agents` on GitHub; edit the lockfile via the skills installer rather than by hand.

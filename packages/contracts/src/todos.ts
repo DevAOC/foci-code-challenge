@@ -1,8 +1,8 @@
-// Validation schemas for the /todos endpoints. Kept free of Prisma and Fastify
-// so they can later move to a shared contracts package unchanged.
+// Validation schemas and the wire representation for /todos. Shared by the API
+// (as the request boundary) and the web app (for pre-submit validation).
 import { z } from "zod";
 
-// Length limits are mirrored by prisma/schema.prisma (`@db.VarChar(200)` /
+// Length limits are mirrored by apps/api/prisma/schema.prisma (`@db.VarChar(200)` /
 // `@db.VarChar(2000)`); the database is the backstop, this is the source of the
 // user-facing message.
 export const TITLE_MAX_LENGTH = 200;
@@ -56,3 +56,16 @@ export const todoIdParamsSchema = z.strictObject({
 export type CreateTodoInput = z.infer<typeof createTodoSchema>;
 export type UpdateTodoInput = z.infer<typeof updateTodoSchema>;
 export type TodoIdParams = z.infer<typeof todoIdParamsSchema>;
+
+/** The JSON representation of a todo returned by every /todos endpoint. */
+export interface TodoResponse {
+  id: string;
+  title: string;
+  description: string | null;
+  /** ISO 8601 instant in UTC, or null. */
+  dueDate: string | null;
+  isCompleted: boolean;
+  /** ISO 8601 timestamps. */
+  createdAt: string;
+  updatedAt: string;
+}

@@ -3,7 +3,7 @@
 // translated here so it never leaks into the HTTP layer.
 import { NotFoundError } from "../http/errors.js";
 import { Prisma, type PrismaClient, type Todo } from "../generated/prisma/client.js";
-import type { CreateTodoInput, UpdateTodoInput } from "./schemas.js";
+import type { CreateTodoInput, UpdateTodoInput } from "@foci/contracts";
 
 export async function createTodo(prisma: PrismaClient, input: CreateTodoInput): Promise<Todo> {
   return prisma.todo.create({

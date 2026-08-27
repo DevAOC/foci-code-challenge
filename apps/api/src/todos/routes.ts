@@ -1,6 +1,6 @@
 // HTTP layer for /todos: parse, validate, delegate to the service, serialize.
 import type { FastifyInstance } from "fastify";
-import { createTodoSchema, todoIdParamsSchema, updateTodoSchema } from "./schemas.js";
+import { createTodoSchema, todoIdParamsSchema, updateTodoSchema } from "@foci/contracts";
 import { serializeTodo } from "./serialize.js";
 import { createTodo, deleteTodo, getTodoById, listTodos, updateTodo } from "./service.js";
 

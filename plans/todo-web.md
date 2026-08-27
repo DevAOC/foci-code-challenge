@@ -61,13 +61,13 @@ Create the `packages/contracts` workspace package and move the validation schema
 
 ### Acceptance criteria
 
-- [ ] `pnpm-workspace.yaml` includes `packages/*`; `@foci/contracts` has `typecheck` and `test` scripts and is picked up by the root `pnpm typecheck` / `pnpm test`
-- [ ] Contracts exports exactly the schemas, input types, length constants, `TodoResponse`, and `ErrorBody`; it depends on zod only
-- [ ] The API has no schema module of its own; routes, service, serializer, and error handler import from `@foci/contracts`
-- [ ] The moved schema tests pass unchanged in the contracts package; the API's HTTP test suite passes unchanged
-- [ ] A single zod version is resolved across the workspace (`pnpm why zod` shows one)
-- [ ] `docs/decisions.md` and `CLAUDE.md` describe the contracts layering rule
-- [ ] `pnpm typecheck` and `pnpm test` green; PR A opened
+- [x] `pnpm-workspace.yaml` includes `packages/*`; `@foci/contracts` has `typecheck` and `test` scripts and is picked up by the root `pnpm typecheck` / `pnpm test`
+- [x] Contracts exports exactly the schemas, input types, length constants, `TodoResponse`, and `ErrorBody`; it depends on zod only
+- [x] The API has no schema module of its own; routes, service, serializer, and error handler import from `@foci/contracts`
+- [x] The moved schema tests pass unchanged in the contracts package; the API's HTTP test suite passes unchanged
+- [x] A single zod version is resolved across the workspace (`pnpm why zod` shows one)
+- [x] `docs/decisions.md` and `CLAUDE.md` describe the contracts layering rule
+- [x] `pnpm typecheck` and `pnpm test` green; PR A opened
 
 ---
 

@@ -1,17 +1,7 @@
+import type { TodoResponse } from "@foci/contracts";
 import type { Todo } from "../generated/prisma/client.js";
 
-/** The JSON representation of a todo returned by every /todos endpoint. */
-export interface TodoResponse {
-  id: string;
-  title: string;
-  description: string | null;
-  /** ISO 8601 instant in UTC, or null. */
-  dueDate: string | null;
-  isCompleted: boolean;
-  /** ISO 8601 timestamps. */
-  createdAt: string;
-  updatedAt: string;
-}
+export type { TodoResponse };
 
 export function serializeTodo(todo: Todo): TodoResponse {
   return {
